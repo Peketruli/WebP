@@ -1,9 +1,6 @@
-<!DOCTYPE html>
-<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ajustes - Rebeldía IN.AR</title>
+    <title>Rebeldía IN.AR</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         body {
             background: linear-gradient(45deg, #FF5733, #FF8D1A, #FFC300, #FF5733);
@@ -14,6 +11,7 @@
             text-align: center;
             padding: 50px;
             position: relative;
+            margin-bottom: 100px; 
         }
 
         @keyframes gradientBG {
@@ -22,120 +20,224 @@
             100% { background-position: 0% 50%; }
         }
 
-        .settings-container {
-            max-width: 400px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        .auth-container, .user-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        label {
-            display: block;
-            text-align: left;
-            margin-top: 10px;
-            font-weight: bold;
-            color: #333;
-        }
-
-        input {
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+        .auth-button {
+            padding: 10px 20px;
             font-size: 1em;
-            margin-bottom: 10px;
-        }
-
-        .readonly {
-            background: #e9e9e9;
-            cursor: not-allowed;
-        }
-
-        button {
-            margin-top: 15px;
-            padding: 10px;
-            background: #333;
             color: white;
+            background-color: #333;
             border: none;
             cursor: pointer;
-            width: 100%;
             border-radius: 5px;
+            text-decoration: none;
+            margin: 5px;
         }
 
-        button:hover {
-            background: #555;
+        .user-info {
+            display: none;
+            cursor: pointer;
+        }
+
+        #userLogo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        #userName {
+            font-size: 1em;
+            font-weight: bold;
+        }
+
+        /* Menú desplegable */
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            background-color: white;
+            color: black;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 150px;
+            text-align: left;
+        }
+
+        .dropdown-menu td {
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .dropdown-menu td:hover {
+            background-color: #ddd;
+        }
+
+        /* Contenedor de los botones de navegación */
+        .nav-container {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 15px 0;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .nav-button {
+            background-color: #007BFF;
+            color: white;
+            padding: 12px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 18%;
+            transition: background-color 0.3s;
+        }
+
+        .nav-button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Botón de descarga de PDF */
+        #pdfButtonContainer {
+            margin-top: 20px;
+        }
+
+        #downloadButton {
+            background-color: #dc3545;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            display: none;
+        }
+
+        #downloadButton:hover {
+            background-color: #c82333;
         }
     </style>
 </head>
 <body>
-    <button onclick="window.location.href='PaginaPrincipal.html'">🏠 Volver a la Página Principal</button>
-    <div class="settings-container">
-        <h2>Ajustes de Usuario</h2>
+    <h1>Bienvenidos a Rebeldía IN.AR</h1>
 
-        <label for="userEmail">Correo electrónico</label>
-        <input type="email" id="userEmail" class="readonly" readonly>
-
-        <label for="userPassword">Contraseña</label>
-        <input type="password" id="userPassword" class="readonly" readonly>
-
-        <label for="userName">Nombre de usuario</label>
-        <input type="text" id="userName">
-
-        <label for="userLogo">Logo de perfil</label>
-        <input type="file" id="userLogo" accept="image/*">
-        <img id="previewLogo" src="" alt="Vista previa" style="width: 100px; height: 100px; display: none; margin-top: 10px;">
-
-        <button onclick="saveSettings()">Guardar cambios</button>
+    
+    <div class="auth-container" id="authContainer">
+        <button class="auth-button" onclick="window.location.href='login.html'">Iniciar sesión o registrarse</button>
     </div>
 
-    <script>
-        function loadUserSettings() {
-            const user = JSON.parse(localStorage.getItem("currentUser"));
-            if (user) {
-                document.getElementById("userEmail").value = user.email || "";
-                document.getElementById("userPassword").value = "********";
-                document.getElementById("userName").value = user.username || "";
-                if (user.logo) {
-                    document.getElementById("previewLogo").src = user.logo;
-                    document.getElementById("previewLogo").style.display = "block";
-                }
-            }
-        }
+    <div class="user-info" id="userInfo">
+        <h3 id="userName"></h3>
+        <img id="userLogo" src="logoDefault.png" alt="Logo del usuario">
+    </div>
 
-        document.getElementById("userLogo").addEventListener("change", function(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById("previewLogo").src = e.target.result;
-                    document.getElementById("previewLogo").style.display = "block";
-                };
-                reader.readAsDataURL(file);
+ 
+    <div class="dropdown-menu" id="dropdownMenu">
+        <table>
+            <tr><td onclick="goToSettings()">⚙ Ajustes</td></tr>
+            <tr><td onclick="logout()">🚪 Cerrar sesión</td></tr>
+        </table>
+    </div>
+
+    <!-- Botón para descargar el PDF de registros -->
+    <div id="pdfButtonContainer">
+        <button id="downloadButton" onclick="downloadPDF()">Descargar PDF de Registros</button>
+    </div>
+
+    
+    <div class="nav-container">
+        <button class="nav-button" onclick="window.location.href='blog.html'">Blog</button>
+        <button class="nav-button" onclick="window.location.href='clubs.html'">Clubs</button>
+        <button class="nav-button" onclick="window.location.href='calendario.html'">Calendario</button>
+        <button class="nav-button" onclick="window.location.href='Juegos.html'">Juegos</button>
+        <button class="nav-button" onclick="window.location.href='Encuesta.html'">Encuesta mejoras</button>
+    </div>
+
+    <h2>Bienvenidos a una página web que en mi opinión debería haber hecho el instituto hace mucho. Podéis hacer lo que queráis, podéis hacer un blog insultando a profesores, debatir, hacer grupos de trabajo, clubs… La intención de la web es un sitio donde los alumnos se sientan libres de la cárcel del instituto de Arrigorriaga. Espero que disfrutéis.</h2>
+    
+    <h1>Motivo</h1> 
+    <h2>Como el instituto solo piensa para sus beneficios, he pensado en hacer una web para los alumnos, donde el límite no existe y podéis sentiros libres de criticar a profesores o hacer todo lo que se puede hacer en la web. Gracias.</h2>
+
+<div id="pdfButtonContainer">
+    <button id="downloadButton" onclick="downloadPDF()">Descargar PDF de Registros</button>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        loadUserInfo();
+
+        const userInfo = document.getElementById("userInfo");
+        const dropdownMenu = document.getElementById("dropdownMenu");
+
+        userInfo.addEventListener("click", function () {
+            if (dropdownMenu.style.display === "block") {
+                dropdownMenu.style.display = "none";
+            } else {
+                dropdownMenu.style.display = "block";
             }
         });
 
-        function saveSettings() {
-            const user = JSON.parse(localStorage.getItem("currentUser")) || {};
-            user.username = document.getElementById("userName").value;
-            const logoInput = document.getElementById("userLogo");
-            if (logoInput.files.length > 0) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    user.logo = e.target.result;
-                    localStorage.setItem("currentUser", JSON.stringify(user));
-                    alert("Configuración guardada");
-                };
-                reader.readAsDataURL(logoInput.files[0]);
-            } else {
-                localStorage.setItem("currentUser", JSON.stringify(user));
-                alert("Configuración guardada");
+        
+        document.addEventListener("click", function (event) {
+            if (!userInfo.contains(event.target) && !dropdownMenu.contains(event.target)) {
+                dropdownMenu.style.display = "none";
             }
-        }
+        });
+    });
 
-        document.addEventListener("DOMContentLoaded", loadUserSettings);
-    </script>
+    function goToSettings() {
+        window.location.href = 'ajustes.html';
+    }
+
+  
+    function logout() {
+    localStorage.removeItem("currentUser"); 
+    window.location.href = 'login.html';
+}
+
+    
+    function loadUserInfo() {
+        const user = JSON.parse(localStorage.getItem("currentUser"));
+        const authContainer = document.getElementById("authContainer");
+        const userInfo = document.getElementById("userInfo");
+
+        if (user) {
+            userInfo.style.display = "flex";
+            authContainer.style.display = "none";
+            document.getElementById("userName").textContent = user.username || "Usuario";
+            document.getElementById("userLogo").src = user.logo || "logoDefault.png";
+
+            if (user.email === "peketruli@gmail.com") {
+                document.getElementById("downloadButton").style.display = "block";
+            }
+        } else {
+            userInfo.style.display = "none";
+            authContainer.style.display = "flex";
+        }
+    }
+    function downloadPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        let users = JSON.parse(localStorage.getItem("users")) || [];
+        let content = "Datos de los registros:\n\n";
+
+        users.forEach(user => {
+            content += `Nombre de usuario: ${user.username}\nCorreo electrónico: ${user.email}\nLogo: ${user.logo ? "Sí" : "No"}\n\n`;
+        });
+
+        doc.text(content, 10, 10);
+        doc.save("registros.pdf");
+    }
+</script>
 </body>
-</html>
