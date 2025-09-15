@@ -1,9 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rebeldía IN.AR</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script> <!-- Librería jsPDF -->
     <style>
         body {
@@ -15,7 +10,7 @@
             text-align: center;
             padding: 50px;
             position: relative;
-            margin-bottom: 100px; /* Espacio para los botones inferiores */
+            margin-bottom: 100px; 
         }
 
         @keyframes gradientBG {
@@ -262,4 +257,3 @@
     }
 </script>
 </body>
-</html>
