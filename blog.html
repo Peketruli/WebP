@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog - Rebeldía IN.AR</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script> <!-- Librería jsPDF -->
+    <style>
+        body {
+            background: linear-gradient(45deg, #FF5733, #FF8D1A, #FFC300, #FF5733);
+            background-size: 400% 400%;
+            animation: gradientBG 10s ease infinite;
+            color: rgb(0, 0, 0);
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+            position: relative;
+            margin-bottom: 100px; /* Espacio para los botones inferiores */
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .blog-container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .blog-list {
+            margin-top: 20px;
+        }
+        .blog-post {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px 0;
+            cursor: pointer;
+            background: #f9f9f9;
+            border-radius: 5px;
+        }
+        .hidden {
+            display: none;
+        }
+        .blog-form {
+            margin-top: 20px;
+        }
+        img {
+            max-width: 150px;
+            height: auto;
+            display: block;
+            margin-top: 10px;
+        }
+        .blog-details {
+            padding: 20px;
+            background: white;
+            margin-top: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .comment-section {
+            margin-top: 20px;
+            text-align: left;
+        }
+        /* Estilos del segundo código (autenticación) */
+        .auth-container, .user-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .auth-button {
+            padding: 10px 20px;
+            font-size: 1em;
+            color: white;
+            background-color: #333;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            text-decoration: none;
+            margin: 5px;
+        }
+
+        .user-info {
+            display: none;
+            cursor: pointer;
+        }
+
+        #userLogo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        #userName {
+            font-size: 1em;
+            font-weight: bold;
+        }
+
+        /* Menú desplegable */
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            background-color: white;
+            color: black;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 150px;
+            text-align: left;
+        }
+
+        .dropdown-menu td {
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .dropdown-menu td:hover {
+            background-color: #ddd;
+        }
+
+        /* Mensaje de advertencia */
+        .warning-message {
+            color: red;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <button onclick="window.location.href='PaginaPrincipal.html'">🏠 Volver a la Página Principal</button>
+    <div class="auth-container" id="authContainer">
+        <button class="auth-button" onclick="window.location.href='login.html'">Iniciar sesión o registrarse</button>
+    </div>
+
+    <div class="user-info" id="userInfo">
+        <h3 id="userName"></h3>
+        <img id="userLogo" src="logoDefault.png" alt="Logo del usuario">
+    </div>
+
+    <div class="dropdown-menu" id="dropdownMenu">
+        <table>
+            <tr><td onclick="goToSettings()">⚙ Ajustes</td></tr>
+            <tr><td onclick="logout()">🚪 Cerrar sesión</td></tr>
+        </table>
+    </div>
+
+    <div class="blog-container">
+        <h2>Crear Blog</h2>
+        <button onclick="toggleBlogForm()">✏️ Crear Blog</button>
+        <div id="blogForm" class="blog-form hidden">
+            <input type="text" id="blogTitle" placeholder="Título del blog" style="width: 100%; padding: 8px;">
+            <textarea id="blogContent" placeholder="Escribe aquí..." style="width: 100%; height: 100px; padding: 8px;"></textarea>
+            <input type="file" id="blogMedia" accept="image/*,video/*">
+            <button onclick="publishBlog()">Publicar</button>
+        </div>
+
+        <h2>Blogs Publicados</h2>
+        <div id="blogsList" class="blog-list"></div>
+        <div id="blogDetails" class="blog-details hidden"></div>
+
+        <div id="warningMessage" class="warning-message hidden">¡Debes iniciar sesión para crear un blog o comentar!</div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            loadUserInfo();
+
+            const userInfo = document.getElementById("userInfo");
+            const dropdownMenu = document.getElementById("dropdownMenu");
+
+            userInfo.addEventListener("click", function () {
+                if (dropdownMenu.style.display === "block") {
+                    dropdownMenu.style.display = "none";
+                } else {
+                    dropdownMenu.style.display = "block";
+                }
+            });
+
+            document.addEventListener("click", function (event) {
+                if (!userInfo.contains(event.target) && !dropdownMenu.contains(event.target)) {
+                    dropdownMenu.style.display = "none";
+                }
+            });
+
+            displayBlogs();
+        });
+
+        function toggleBlogForm() {
+            if (!isUserLoggedIn()) {
+                document.getElementById("warningMessage").classList.remove("hidden");
+                return;
+            }
+            document.getElementById("warningMessage").classList.add("hidden");
+            let form = document.getElementById("blogForm");
+            form.classList.toggle("hidden");
+        }
+
+        function getCurrentUser() {
+            return JSON.parse(localStorage.getItem("currentUser")) || {};
+        }
+
+        function isUserLoggedIn() {
+            return !!getCurrentUser().username;
+        }
+
+        function publishBlog() {
+            if (!isUserLoggedIn()) {
+                document.getElementById("warningMessage").classList.remove("hidden");
+                return;
+            }
+            document.getElementById("warningMessage").classList.add("hidden");
+
+            let title = document.getElementById("blogTitle").value;
+            let content = document.getElementById("blogContent").value;
+            let mediaInput = document.getElementById("blogMedia");
+            let user = getCurrentUser();
+
+            if (!title || !content) {
+                alert("Por favor, completa al menos el título y el contenido antes de publicar.");
+                return;
+            }
+
+            let blogs = JSON.parse(localStorage.getItem("blogs")) || [];
+            let mediaURL = "";
+            let authorName = user.username || user.email || "Anónimo";
+
+            if (mediaInput.files.length > 0) {
+                let file = mediaInput.files[0];
+                let reader = new FileReader();
+
+                reader.onload = function (event) {
+                    mediaURL = event.target.result;
+                    blogs.push({ title, content, mediaURL, author: authorName, comments: [] });
+                    localStorage.setItem("blogs", JSON.stringify(blogs));
+                    location.reload();
+                };
+                reader.readAsDataURL(file);
+            } else {
+                blogs.push({ title, content, mediaURL, author: authorName, comments: [] });
+                localStorage.setItem("blogs", JSON.stringify(blogs));
+                location.reload();
+            }
+        }
+
+        function displayBlogs() {
+            let blogs = JSON.parse(localStorage.getItem("blogs")) || [];
+            let container = document.getElementById("blogsList");
+            container.innerHTML = "";
+            blogs.forEach((blog, index) => {
+                let blogElement = `<div class='blog-post' onclick='openBlog(${index})'>
+                    <h3>${blog.title}</h3>
+                    <p><strong>Autor:</strong> ${blog.author}</p>
+                </div>`;
+                container.innerHTML += blogElement;
+            });
+        }
+
+        function openBlog(index) {
+            let blogs = JSON.parse(localStorage.getItem("blogs")) || [];
+            let blog = blogs[index];
+            let detailsContainer = document.getElementById("blogDetails");
+
+            detailsContainer.innerHTML = `<h2>${blog.title}</h2>
+                <p>${blog.content}</p>
+                <p><strong>Autor:</strong> ${blog.author}</p>
+                ${blog.mediaURL ? `<img src="${blog.mediaURL}" alt="Imagen del blog">` : ""}
+                <button onclick="closeBlog()">Cerrar</button>
+                <div class="comment-section">
+                    <h3>Comentarios</h3>
+                    <input type="text" id="commentInput${index}" placeholder="Escribe un comentario..." style="width: 100%; padding: 8px;" onkeypress="handleEnter(event, ${index})">
+                    <button onclick="postComment(${index})">Comentar</button>
+                    <div id="comments${index}"></div>
+                </div>`;
+            
+            detailsContainer.classList.remove("hidden");
+            document.getElementById("blogsList").classList.add("hidden");
+            displayComments(index);
+        }
+
+        function closeBlog() {
+            document.getElementById("blogDetails").classList.add("hidden");
+            document.getElementById("blogsList").classList.remove("hidden");
+        }
+
+        function postComment(index) {
+            if (!isUserLoggedIn()) {
+                document.getElementById("warningMessage").classList.remove("hidden");
+                return;
+            }
+            document.getElementById("warningMessage").classList.add("hidden");
+
+            let blogs = JSON.parse(localStorage.getItem("blogs")) || [];
+            let commentText = document.getElementById(`commentInput${index}`).value;
+            let user = getCurrentUser();
+
+            if (!commentText) return;
+
+            let comment = { author: user.username || user.email || "Anónimo", text: commentText };
+            blogs[index].comments.push(comment);
+            localStorage.setItem("blogs", JSON.stringify(blogs));
+            displayComments(index);
+        }
+
+        function displayComments(index) {
+            let blogs = JSON.parse(localStorage.getItem("blogs")) || [];
+            let commentsContainer = document.getElementById(`comments${index}`);
+            commentsContainer.innerHTML = blogs[index].comments.map(c => `<p><strong>${c.author}:</strong> ${c.text}</p>`).join("");
+        }
+
+        function goToSettings() {
+            window.location.href = 'ajustes.html';
+        }
+
+        function logout() {
+            localStorage.removeItem("currentUser"); // Elimina el usuario actual
+            window.location.href = 'login.html';
+        }
+
+        function loadUserInfo() {
+            const user = JSON.parse(localStorage.getItem("currentUser"));
+            const authContainer = document.getElementById("authContainer");
+            const userInfo = document.getElementById("userInfo");
+
+            if (user) {
+                userInfo.style.display = "flex";
+                authContainer.style.display = "none";
+                document.getElementById("userName").textContent = user.username || "Usuario";
+                document.getElementById("userLogo").src = user.logo || "logoDefault.png";
+            } else {
+                userInfo.style.display = "none";
+                authContainer.style.display = "flex";
+            }
+        }
+    </script>
+</body>
+</html>

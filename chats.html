@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat al estilo WhatsApp</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+        }
+
+        .chat-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            margin-left: auto;
+            margin-right: auto;
+            max-width: 600px;
+            height: 100%;
+            background-color: white;
+        }
+
+        .header {
+            background-color: #25d366;
+            padding: 10px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: #e5ddd5;
+        }
+
+        .chat-list div {
+            padding: 10px;
+            background-color: #fff;
+            margin: 5px 0;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .message-box {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: #fff;
+            border-top: 1px solid #ddd;
+        }
+
+        .message-box input {
+            width: 80%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        .message-box button {
+            background-color: #25d366;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .message-box button:hover {
+            background-color: #128c7e;
+        }
+
+        .message {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+            max-width: 80%;
+        }
+
+        .message.sent {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message.received {
+            align-self: flex-start;
+            flex-direction: row;
+        }
+
+        .message .bubble {
+            padding: 10px;
+            border-radius: 15px;
+            background-color: #dcf8c6;
+            color: black;
+            word-wrap: break-word;
+        }
+
+        .message.received .bubble {
+            background-color: #fff;
+        }
+
+        .message .sender-name {
+            font-size: 12px;
+            font-weight: bold;
+            margin: 0 10px;
+            color: #333;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .back-button {
+            background-color: #25d366;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .back-button:hover {
+            background-color: #128c7e;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="chat-container">
+        <div class="header">
+            <span>Chat</span>
+            <button onclick="showNewChat()">Nuevo Chat</button>
+        </div>
+
+        <button class="back-button" onclick="goToMainPage()">Volver a Página Principal</button>
+
+        <div class="chat-list" id="chatList"></div>
+
+        <div id="chatView" style="display:none;">
+            <button class="back-button" onclick="goBackToChats()">Volver a grupos</button>
+            <div class="chat-list" id="messagesList"></div>
+
+            <div class="message-box">
+                <input type="text" id="messageInput" placeholder="Escribe un mensaje...">
+                <button onclick="sendMessage()">Enviar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Verificar si el usuario ha iniciado sesión
+        let username = localStorage.getItem("currentUser");
+
+        if (!username) {
+            alert("Debes iniciar sesión para acceder al chat.");
+            window.location.href = "login.html"; // Redirige a la página de inicio de sesión
+        }
+
+        let chats = JSON.parse(localStorage.getItem('chats')) || [];
+        let currentChat = null;
+
+        function showNewChat() {
+            const newChatName = prompt("Introduce el nombre del nuevo chat:");
+            if (newChatName) {
+                const newChat = { name: newChatName, messages: [] };
+                chats.push(newChat);
+                saveChats();
+                renderChatList();
+            }
+        }
+
+        function renderChatList() {
+            const chatListElement = document.getElementById("chatList");
+            chatListElement.innerHTML = '';
+
+            chats.forEach((chat, index) => {
+                const chatElement = document.createElement("div");
+                chatElement.textContent = chat.name;
+                chatElement.onclick = () => openChat(index);
+                chatListElement.appendChild(chatElement);
+            });
+        }
+
+        function openChat(index) {
+            currentChat = index;
+            document.getElementById("chatList").style.display = 'none';
+            document.getElementById("chatView").style.display = 'block';
+            renderMessages();
+        }
+
+        function renderMessages() {
+            const chat = chats[currentChat];
+            const messagesListElement = document.getElementById("messagesList");
+            messagesListElement.innerHTML = '';
+
+            chat.messages.forEach(message => {
+                const messageElement = document.createElement("div");
+                messageElement.classList.add("message", message.type);
+
+                const senderName = document.createElement("div");
+                senderName.classList.add("sender-name");
+                senderName.textContent = message.sender; // Solo el nombre
+
+                const bubble = document.createElement("div");
+                bubble.classList.add("bubble");
+                bubble.textContent = message.text;
+
+                messageElement.appendChild(senderName);
+                messageElement.appendChild(bubble);
+
+                messagesListElement.appendChild(messageElement);
+            });
+        }
+
+        function sendMessage() {
+            const messageInput = document.getElementById("messageInput");
+            const messageText = messageInput.value.trim();
+
+            if (messageText === '') return;
+
+            const message = { 
+                sender: username, 
+                text: messageText, 
+                type: 'sent' 
+            };
+
+            chats[currentChat].messages.push(message);
+            saveChats();
+            renderMessages();
+            messageInput.value = '';
+        }
+
+        function saveChats() {
+            localStorage.setItem('chats', JSON.stringify(chats));
+        }
+
+        function goBackToChats() {
+            document.getElementById("chatList").style.display = 'block';
+            document.getElementById("chatView").style.display = 'none';
+        }
+
+        function goToMainPage() {
+            window.location.href = "PaginaPrincipal.html"; // Redirige a la página principal
+        }
+
+        renderChatList();
+    </script>
+</body>
+</html>
