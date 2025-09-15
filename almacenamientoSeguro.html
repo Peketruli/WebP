@@ -1,8 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Almacenamiento Seguro</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
@@ -13,7 +9,7 @@
     <script>
         function encryptAndUpload() {
             let data = document.getElementById("data").value;
-            let password = "clave_secreta"; // Mejor pedir al usuario
+            let password = "clave_secreta";
             let encrypted = CryptoJS.AES.encrypt(data, password).toString();
             
             fetch("upload.php", {
@@ -24,4 +20,3 @@
         }
     </script>
 </body>
-</html>
