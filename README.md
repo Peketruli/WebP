@@ -32,7 +32,7 @@
         .auth-button {
             padding: 10px 20px;
             font-size: 1em;
-            color: black;
+            color: white;
             background-color: #333;
             border: none;
             cursor: pointer;
@@ -63,7 +63,7 @@
             position: absolute;
             top: 60px;
             right: 20px;
-            background-color: black;
+            background-color: white;
             color: black;
             border-radius: 5px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
