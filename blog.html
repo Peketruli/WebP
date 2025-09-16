@@ -198,6 +198,14 @@
             displayBlogs();
         });
 
+        function getCurrentUser() {
+            return JSON.parse(localStorage.getItem("currentUser")) || {};
+        }
+
+        function isUserLoggedIn() {
+            return !!getCurrentUser().username;
+        }
+
         function toggleBlogForm() {
     if (!isUserLoggedIn()) {
         document.getElementById("warningMessage").classList.remove("hidden");
@@ -207,48 +215,45 @@
     let form = document.getElementById("blogForm");
     form.classList.toggle("hidden");
 }
+
+// Exponer la función para que los botones la puedan usar
 window.toggleBlogForm = toggleBlogForm;
 
 
-        function getCurrentUser() {
-            return JSON.parse(localStorage.getItem("currentUser")) || {};
-        }
+async function publishBlog() {
+    if (!isUserLoggedIn()) {
+        document.getElementById("warningMessage").classList.remove("hidden");
+        return;
+    }
+    document.getElementById("warningMessage").classList.add("hidden");
 
-        function isUserLoggedIn() {
-            return !!getCurrentUser().username;
-        }
+    let title = document.getElementById("blogTitle").value;
+    let content = document.getElementById("blogContent").value;
+    let user = getCurrentUser();
 
-        async function publishBlog() {
-  if (!isUserLoggedIn()) {
-    document.getElementById("warningMessage").classList.remove("hidden");
-    return;
-  }
-  document.getElementById("warningMessage").classList.add("hidden");
+    if (!title || !content) {
+        alert("Por favor, completa el título y el contenido.");
+        return;
+    }
 
-  let title = document.getElementById("blogTitle").value;
-  let content = document.getElementById("blogContent").value;
-  let user = getCurrentUser();
+    const { error } = await supabase
+        .from("blogs")
+        .insert([
+            { title, content, author: user.username || "Anónimo", comments: [] }
+        ]);
 
-  if (!title || !content) {
-    alert("Por favor, completa el título y el contenido.");
-    return;
-  }
-
-  const { error } = await supabase
-    .from("blogs")
-    .insert([
-      { title, content, author: user.username || "Anónimo", comments: [] }
-    ]);
-
-  if (error) {
-    console.error(error);
-    alert("❌ Error al publicar blog");
-  } else {
-    alert("✅ Blog publicado!");
-    location.reload();
-  }
+    if (error) {
+        console.error(error);
+        alert("❌ Error al publicar blog");
+    } else {
+        alert("✅ Blog publicado!");
+        location.reload();
+    }
 }
+
+// Exponer también esta función
 window.publishBlog = publishBlog;
+
         
         async function displayBlogs() {
   let { data: blogs, error } = await supabase
