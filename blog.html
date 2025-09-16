@@ -1,5 +1,5 @@
 <head>
-    <title>Blog - Rebeldía IN.AR</title>
+    <title>Blog</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script> <!-- Librería jsPDF -->
     <style>
         body {
@@ -248,7 +248,8 @@ window.toggleBlogForm = toggleBlogForm;
     location.reload();
   }
 }
-
+window.publishBlog = publishBlog;
+        
         async function displayBlogs() {
   let { data: blogs, error } = await supabase
     .from("blogs")
