@@ -1,390 +1,69 @@
 <head>
     <title>Blog</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script> <!-- Librería jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        body {
-            background: linear-gradient(45deg, #FF5733, #FF8D1A, #FFC300, #FF5733);
-            background-size: 400% 400%;
-            animation: gradientBG 10s ease infinite;
-            color: rgb(0, 0, 0);
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 50px;
-            position: relative;
-            margin-bottom: 100px; /* Espacio para los botones inferiores */
-        }
-
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        .blog-container {
-            max-width: 800px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
-        .blog-list {
-            margin-top: 20px;
-        }
-        .blog-post {
-            border: 1px solid #ddd;
-            padding: 10px;
-            margin: 10px 0;
-            cursor: pointer;
-            background: #f9f9f9;
-            border-radius: 5px;
-        }
-        .hidden {
-            display: none;
-        }
-        .blog-form {
-            margin-top: 20px;
-        }
-        img {
-            max-width: 150px;
-            height: auto;
-            display: block;
-            margin-top: 10px;
-        }
-        .blog-details {
-            padding: 20px;
-            background: white;
-            margin-top: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        .comment-section {
-            margin-top: 20px;
-            text-align: left;
-        }
-        /* Estilos del segundo código (autenticación) */
-        .auth-container, .user-info {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .auth-button {
-            padding: 10px 20px;
-            font-size: 1em;
-            color: white;
-            background-color: #333;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
-            text-decoration: none;
-            margin: 5px;
-        }
-
-        .user-info {
-            display: none;
-            cursor: pointer;
-        }
-
-        #userLogo {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-        }
-
-        #userName {
-            font-size: 1em;
-            font-weight: bold;
-        }
-
-        /* Menú desplegable */
-        .dropdown-menu {
-            display: none;
-            position: absolute;
-            top: 60px;
-            right: 20px;
-            background-color: white;
-            color: black;
-            border-radius: 5px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            width: 150px;
-            text-align: left;
-        }
-
-        .dropdown-menu td {
-            padding: 10px;
-            cursor: pointer;
-        }
-
-        .dropdown-menu td:hover {
-            background-color: #ddd;
-        }
-
-        /* Mensaje de advertencia */
-        .warning-message {
-            color: red;
-            font-weight: bold;
-            text-align: center;
-            margin-top: 20px;
-        }
+        body { background: linear-gradient(45deg, #FF5733, #FF8D1A, #FFC300, #FF5733); background-size: 400% 400%; animation: gradientBG 10s ease infinite; color: #000; font-family: Arial; text-align: center; padding: 50px; margin-bottom: 100px; }
+        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .blog-container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); text-align: center; }
+        .blog-list { margin-top: 20px; }
+        .blog-post { border: 1px solid #ddd; padding: 10px; margin: 10px 0; cursor: pointer; background: #f9f9f9; border-radius: 5px; }
+        .hidden { display: none; }
+        .blog-form { margin-top: 20px; }
+        .blog-details { padding: 20px; background: white; margin-top: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .comment-section { margin-top: 20px; text-align: left; }
+        .warning-message { color: red; font-weight: bold; margin-top: 20px; }
     </style>
 </head>
 <body>
-    <button onclick="window.location.href='PaginaPrincipal.html'">🏠 Volver a la Página Principal</button>
-    <div class="auth-container" id="authContainer">
-        <button class="auth-button" onclick="window.location.href='login.html'">Iniciar sesión o registrarse</button>
-    </div>
-
-    <div class="user-info" id="userInfo">
-        <h3 id="userName"></h3>
-        <img id="userLogo" src="logoDefault.png" alt="Logo del usuario">
-    </div>
-
-    <div class="dropdown-menu" id="dropdownMenu">
-        <table>
-            <tr><td onclick="goToSettings()">⚙ Ajustes</td></tr>
-            <tr><td onclick="logout()">🚪 Cerrar sesión</td></tr>
-        </table>
-    </div>
-
     <div class="blog-container">
         <h2>Crear Blog</h2>
-        <button onclick="toggleBlogForm()">✏️ Crear Blog</button>
+        <button id="toggleBlogButton">✏️ Crear Blog</button>
+
         <div id="blogForm" class="blog-form hidden">
-            <input type="text" id="blogTitle" placeholder="Título del blog" style="width: 100%; padding: 8px;">
-            <textarea id="blogContent" placeholder="Escribe aquí..." style="width: 100%; height: 100px; padding: 8px;"></textarea>
+            <input type="text" id="blogTitle" placeholder="Título del blog" style="width:100%; padding:8px;">
+            <textarea id="blogContent" placeholder="Escribe aquí..." style="width:100%; height:100px; padding:8px;"></textarea>
             <input type="file" id="blogMedia" accept="image/*,video/*">
-            <button onclick="publishBlog()">Publicar</button>
+            <button id="publishButton">Publicar</button>
         </div>
 
-        <h2>Blogs Publicados</h2>
         <div id="blogsList" class="blog-list"></div>
         <div id="blogDetails" class="blog-details hidden"></div>
-
         <div id="warningMessage" class="warning-message hidden">¡Debes iniciar sesión para crear un blog o comentar!</div>
     </div>
 
     <script type="module">
-         import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+        import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+        const SUPABASE_URL = "https://jdvwlfogkzrzovepzjqa.supabase.co";
+        const SUPABASE_KEY = "TU_SUPABASE_KEY";
+        window.supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  const SUPABASE_URL = "https://jdvwlfogkzrzovepzjqa.supabase.co"
-  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkdndsZm9na3pyem92ZXB6anFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzY1MjEsImV4cCI6MjA3MzYxMjUyMX0.IwVFrvuluY0tfgE82XnqYSsRjFPsDYnlfyirHjKu1TI";
-  window.supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+        function getCurrentUser() { return JSON.parse(localStorage.getItem("currentUser")) || {}; }
+        function isUserLoggedIn() { return !!getCurrentUser().username; }
 
-        document.addEventListener("DOMContentLoaded", function () {
-            loadUserInfo();
+        async function publishBlog() {
+            if (!isUserLoggedIn()) { document.getElementById("warningMessage").classList.remove("hidden"); return; }
+            document.getElementById("warningMessage").classList.add("hidden");
 
-            const userInfo = document.getElementById("userInfo");
-            const dropdownMenu = document.getElementById("dropdownMenu");
+            const title = document.getElementById("blogTitle").value;
+            const content = document.getElementById("blogContent").value;
+            const user = getCurrentUser();
 
-            userInfo.addEventListener("click", function () {
-                if (dropdownMenu.style.display === "block") {
-                    dropdownMenu.style.display = "none";
-                } else {
-                    dropdownMenu.style.display = "block";
-                }
-            });
+            if (!title || !content) { alert("Completa título y contenido"); return; }
 
-            document.addEventListener("click", function (event) {
-                if (!userInfo.contains(event.target) && !dropdownMenu.contains(event.target)) {
-                    dropdownMenu.style.display = "none";
-                }
-            });
-
-            displayBlogs();
-        });
-
-        function getCurrentUser() {
-            return JSON.parse(localStorage.getItem("currentUser")) || {};
-        }
-
-        function isUserLoggedIn() {
-            return !!getCurrentUser().username;
+            const { error } = await supabase.from("blogs").insert([{ title, content, author: user.username || "Anónimo", comments: [] }]);
+            if (error) { console.error(error); alert("Error al publicar"); }
+            else { alert("Blog publicado!"); location.reload(); }
         }
 
         function toggleBlogForm() {
-    if (!isUserLoggedIn()) {
-        document.getElementById("warningMessage").classList.remove("hidden");
-        return;
-    }
-    document.getElementById("warningMessage").classList.add("hidden");
-    let form = document.getElementById("blogForm");
-    form.classList.toggle("hidden");
-}
-
-// Exponer la función para que los botones la puedan usar
-window.toggleBlogForm = toggleBlogForm;
-
-
-async function publishBlog() {
-    if (!isUserLoggedIn()) {
-        document.getElementById("warningMessage").classList.remove("hidden");
-        return;
-    }
-    document.getElementById("warningMessage").classList.add("hidden");
-
-    let title = document.getElementById("blogTitle").value;
-    let content = document.getElementById("blogContent").value;
-    let user = getCurrentUser();
-
-    if (!title || !content) {
-        alert("Por favor, completa el título y el contenido.");
-        return;
-    }
-
-    const { error } = await supabase
-        .from("blogs")
-        .insert([
-            { title, content, author: user.username || "Anónimo", comments: [] }
-        ]);
-
-    if (error) {
-        console.error(error);
-        alert("❌ Error al publicar blog");
-    } else {
-        alert("✅ Blog publicado!");
-        location.reload();
-    }
-}
-
-// Exponer también esta función
-window.publishBlog = publishBlog;
-
-        
-        async function displayBlogs() {
-  let { data: blogs, error } = await supabase
-    .from("blogs")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error(error);
-    return;
-  }
-
-  let container = document.getElementById("blogsList");
-  container.innerHTML = "";
-
-  blogs.forEach((blog) => {
-    let blogElement = `<div class='blog-post' onclick='openBlog("${blog.id}")'>
-        <h3>${blog.title}</h3>
-        <p><strong>Autor:</strong> ${blog.author}</p>
-      </div>`;
-    container.innerHTML += blogElement;
-  });
-
-  // guarda blogs globalmente
-  window.cachedBlogs = blogs;
-}
-
-
-        function openBlog(id) {
-  let blog = window.cachedBlogs.find(b => b.id === id);
-  let detailsContainer = document.getElementById("blogDetails");
-
-  detailsContainer.innerHTML = `<h2>${blog.title}</h2>
-      <p>${blog.content}</p>
-      <p><strong>Autor:</strong> ${blog.author}</p>
-      <button onclick="closeBlog()">Cerrar</button>
-      <div class="comment-section">
-          <h3>Comentarios</h3>
-          <input type="text" id="commentInput${id}" placeholder="Escribe un comentario..." style="width: 100%; padding: 8px;">
-          <button onclick="postComment('${id}')">Comentar</button>
-          <div id="comments${id}"></div>
-      </div>`;
-
-  detailsContainer.classList.remove("hidden");
-  document.getElementById("blogsList").classList.add("hidden");
-
-  displayComments(id);
-}
-
-
-        function closeBlog() {
-            document.getElementById("blogDetails").classList.add("hidden");
-            document.getElementById("blogsList").classList.remove("hidden");
+            if (!isUserLoggedIn()) { document.getElementById("warningMessage").classList.remove("hidden"); return; }
+            document.getElementById("warningMessage").classList.add("hidden");
+            document.getElementById("blogForm").classList.toggle("hidden");
         }
 
-        async function postComment(blogId) {
-  if (!isUserLoggedIn()) {
-    document.getElementById("warningMessage").classList.remove("hidden");
-    return;
-  }
-  document.getElementById("warningMessage").classList.add("hidden");
-
-  let commentText = document.getElementById(`commentInput${blogId}`).value;
-  let user = getCurrentUser();
-
-  if (!commentText) return;
-
-  // obtén comentarios actuales
-  let { data, error } = await supabase
-    .from("blogs")
-    .select("comments")
-    .eq("id", blogId)
-    .single();
-
-  if (error) return console.error(error);
-
-  let comments = data.comments || [];
-  comments.push({ author: user.username || "Anónimo", text: commentText });
-
-  await supabase
-    .from("blogs")
-    .update({ comments })
-    .eq("id", blogId);
-
-  displayComments(blogId);
-}
-
-
-        async function displayComments(blogId) {
-  let { data, error } = await supabase
-    .from("blogs")
-    .select("comments")
-    .eq("id", blogId)
-    .single();
-
-  if (error) {
-    console.error(error);
-    return;
-  }
-
-  let comments = data.comments || [];
-  let commentsContainer = document.getElementById(`comments${blogId}`);
-  commentsContainer.innerHTML = comments
-    .map(c => `<p><strong>${c.author}:</strong> ${c.text}</p>`)
-    .join("");
-}
-
-
-        function goToSettings() {
-            window.location.href = 'ajustes.html';
-        }
-
-        function logout() {
-            localStorage.removeItem("currentUser"); // Elimina el usuario actual
-            window.location.href = 'login.html';
-        }
-
-        function loadUserInfo() {
-            const user = JSON.parse(localStorage.getItem("currentUser"));
-            const authContainer = document.getElementById("authContainer");
-            const userInfo = document.getElementById("userInfo");
-
-            if (user) {
-                userInfo.style.display = "flex";
-                authContainer.style.display = "none";
-                document.getElementById("userName").textContent = user.username || "Usuario";
-                document.getElementById("userLogo").src = user.logo || "logoDefault.png";
-            } else {
-                userInfo.style.display = "none";
-                authContainer.style.display = "flex";
-            }
-        }
+        window.addEventListener("DOMContentLoaded", () => {
+            document.getElementById("toggleBlogButton").addEventListener("click", toggleBlogForm);
+            document.getElementById("publishButton").addEventListener("click", publishBlog);
+        });
     </script>
 </body>
