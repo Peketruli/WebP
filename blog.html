@@ -199,14 +199,16 @@
         });
 
         function toggleBlogForm() {
-            if (!isUserLoggedIn()) {
-                document.getElementById("warningMessage").classList.remove("hidden");
-                return;
-            }
-            document.getElementById("warningMessage").classList.add("hidden");
-            let form = document.getElementById("blogForm");
-            form.classList.toggle("hidden");
-        }
+    if (!isUserLoggedIn()) {
+        document.getElementById("warningMessage").classList.remove("hidden");
+        return;
+    }
+    document.getElementById("warningMessage").classList.add("hidden");
+    let form = document.getElementById("blogForm");
+    form.classList.toggle("hidden");
+}
+window.toggleBlogForm = toggleBlogForm;
+
 
         function getCurrentUser() {
             return JSON.parse(localStorage.getItem("currentUser")) || {};
