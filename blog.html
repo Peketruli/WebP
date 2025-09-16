@@ -1,6 +1,6 @@
 <head>
-    <title>Blog</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <title>Blog - Rebeldía IN.AR</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script> <!-- Librería jsPDF -->
     <style>
         body {
             background: linear-gradient(45deg, #FF5733, #FF8D1A, #FFC300, #FF5733);
@@ -168,7 +168,13 @@
         <div id="warningMessage" class="warning-message hidden">¡Debes iniciar sesión para crear un blog o comentar!</div>
     </div>
 
-    <script>
+    <script type="module">
+         import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+  const SUPABASE_URL = "https://jdvwlfogkzrzovepzjqa.supabase.co"
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkdndsZm9na3pyem92ZXB6anFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzY1MjEsImV4cCI6MjA3MzYxMjUyMX0.IwVFrvuluY0tfgE82XnqYSsRjFPsDYnlfyirHjKu1TI";
+  window.supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
         document.addEventListener("DOMContentLoaded", function () {
             loadUserInfo();
 
@@ -210,109 +216,143 @@
             return !!getCurrentUser().username;
         }
 
-        function publishBlog() {
-            if (!isUserLoggedIn()) {
-                document.getElementById("warningMessage").classList.remove("hidden");
-                return;
-            }
-            document.getElementById("warningMessage").classList.add("hidden");
+        async function publishBlog() {
+  if (!isUserLoggedIn()) {
+    document.getElementById("warningMessage").classList.remove("hidden");
+    return;
+  }
+  document.getElementById("warningMessage").classList.add("hidden");
 
-            let title = document.getElementById("blogTitle").value;
-            let content = document.getElementById("blogContent").value;
-            let mediaInput = document.getElementById("blogMedia");
-            let user = getCurrentUser();
+  let title = document.getElementById("blogTitle").value;
+  let content = document.getElementById("blogContent").value;
+  let user = getCurrentUser();
 
-            if (!title || !content) {
-                alert("Por favor, completa al menos el título y el contenido antes de publicar.");
-                return;
-            }
+  if (!title || !content) {
+    alert("Por favor, completa el título y el contenido.");
+    return;
+  }
 
-            let blogs = JSON.parse(localStorage.getItem("blogs")) || [];
-            let mediaURL = "";
-            let authorName = user.username || user.email || "Anónimo";
+  const { error } = await supabase
+    .from("blogs")
+    .insert([
+      { title, content, author: user.username || "Anónimo", comments: [] }
+    ]);
 
-            if (mediaInput.files.length > 0) {
-                let file = mediaInput.files[0];
-                let reader = new FileReader();
+  if (error) {
+    console.error(error);
+    alert("❌ Error al publicar blog");
+  } else {
+    alert("✅ Blog publicado!");
+    location.reload();
+  }
+}
 
-                reader.onload = function (event) {
-                    mediaURL = event.target.result;
-                    blogs.push({ title, content, mediaURL, author: authorName, comments: [] });
-                    localStorage.setItem("blogs", JSON.stringify(blogs));
-                    location.reload();
-                };
-                reader.readAsDataURL(file);
-            } else {
-                blogs.push({ title, content, mediaURL, author: authorName, comments: [] });
-                localStorage.setItem("blogs", JSON.stringify(blogs));
-                location.reload();
-            }
-        }
+        async function displayBlogs() {
+  let { data: blogs, error } = await supabase
+    .from("blogs")
+    .select("*")
+    .order("created_at", { ascending: false });
 
-        function displayBlogs() {
-            let blogs = JSON.parse(localStorage.getItem("blogs")) || [];
-            let container = document.getElementById("blogsList");
-            container.innerHTML = "";
-            blogs.forEach((blog, index) => {
-                let blogElement = `<div class='blog-post' onclick='openBlog(${index})'>
-                    <h3>${blog.title}</h3>
-                    <p><strong>Autor:</strong> ${blog.author}</p>
-                </div>`;
-                container.innerHTML += blogElement;
-            });
-        }
+  if (error) {
+    console.error(error);
+    return;
+  }
 
-        function openBlog(index) {
-            let blogs = JSON.parse(localStorage.getItem("blogs")) || [];
-            let blog = blogs[index];
-            let detailsContainer = document.getElementById("blogDetails");
+  let container = document.getElementById("blogsList");
+  container.innerHTML = "";
 
-            detailsContainer.innerHTML = `<h2>${blog.title}</h2>
-                <p>${blog.content}</p>
-                <p><strong>Autor:</strong> ${blog.author}</p>
-                ${blog.mediaURL ? `<img src="${blog.mediaURL}" alt="Imagen del blog">` : ""}
-                <button onclick="closeBlog()">Cerrar</button>
-                <div class="comment-section">
-                    <h3>Comentarios</h3>
-                    <input type="text" id="commentInput${index}" placeholder="Escribe un comentario..." style="width: 100%; padding: 8px;" onkeypress="handleEnter(event, ${index})">
-                    <button onclick="postComment(${index})">Comentar</button>
-                    <div id="comments${index}"></div>
-                </div>`;
-            
-            detailsContainer.classList.remove("hidden");
-            document.getElementById("blogsList").classList.add("hidden");
-            displayComments(index);
-        }
+  blogs.forEach((blog) => {
+    let blogElement = `<div class='blog-post' onclick='openBlog("${blog.id}")'>
+        <h3>${blog.title}</h3>
+        <p><strong>Autor:</strong> ${blog.author}</p>
+      </div>`;
+    container.innerHTML += blogElement;
+  });
+
+  // guarda blogs globalmente
+  window.cachedBlogs = blogs;
+}
+
+
+        function openBlog(id) {
+  let blog = window.cachedBlogs.find(b => b.id === id);
+  let detailsContainer = document.getElementById("blogDetails");
+
+  detailsContainer.innerHTML = `<h2>${blog.title}</h2>
+      <p>${blog.content}</p>
+      <p><strong>Autor:</strong> ${blog.author}</p>
+      <button onclick="closeBlog()">Cerrar</button>
+      <div class="comment-section">
+          <h3>Comentarios</h3>
+          <input type="text" id="commentInput${id}" placeholder="Escribe un comentario..." style="width: 100%; padding: 8px;">
+          <button onclick="postComment('${id}')">Comentar</button>
+          <div id="comments${id}"></div>
+      </div>`;
+
+  detailsContainer.classList.remove("hidden");
+  document.getElementById("blogsList").classList.add("hidden");
+
+  displayComments(id);
+}
+
 
         function closeBlog() {
             document.getElementById("blogDetails").classList.add("hidden");
             document.getElementById("blogsList").classList.remove("hidden");
         }
 
-        function postComment(index) {
-            if (!isUserLoggedIn()) {
-                document.getElementById("warningMessage").classList.remove("hidden");
-                return;
-            }
-            document.getElementById("warningMessage").classList.add("hidden");
+        async function postComment(blogId) {
+  if (!isUserLoggedIn()) {
+    document.getElementById("warningMessage").classList.remove("hidden");
+    return;
+  }
+  document.getElementById("warningMessage").classList.add("hidden");
 
-            let blogs = JSON.parse(localStorage.getItem("blogs")) || [];
-            let commentText = document.getElementById(`commentInput${index}`).value;
-            let user = getCurrentUser();
+  let commentText = document.getElementById(`commentInput${blogId}`).value;
+  let user = getCurrentUser();
 
-            if (!commentText) return;
+  if (!commentText) return;
 
-            let comment = { author: user.username || user.email || "Anónimo", text: commentText };
-            blogs[index].comments.push(comment);
-            localStorage.setItem("blogs", JSON.stringify(blogs));
-            displayComments(index);
-        }
+  // obtén comentarios actuales
+  let { data, error } = await supabase
+    .from("blogs")
+    .select("comments")
+    .eq("id", blogId)
+    .single();
 
-        function displayComments(index) {
-            let blogs = JSON.parse(localStorage.getItem("blogs")) || [];
-            let commentsContainer = document.getElementById(`comments${index}`);
-            commentsContainer.innerHTML = blogs[index].comments.map(c => `<p><strong>${c.author}:</strong> ${c.text}</p>`).join("");
-        }
+  if (error) return console.error(error);
+
+  let comments = data.comments || [];
+  comments.push({ author: user.username || "Anónimo", text: commentText });
+
+  await supabase
+    .from("blogs")
+    .update({ comments })
+    .eq("id", blogId);
+
+  displayComments(blogId);
+}
+
+
+        async function displayComments(blogId) {
+  let { data, error } = await supabase
+    .from("blogs")
+    .select("comments")
+    .eq("id", blogId)
+    .single();
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  let comments = data.comments || [];
+  let commentsContainer = document.getElementById(`comments${blogId}`);
+  commentsContainer.innerHTML = comments
+    .map(c => `<p><strong>${c.author}:</strong> ${c.text}</p>`)
+    .join("");
+}
+
 
         function goToSettings() {
             window.location.href = 'ajustes.html';
