@@ -251,13 +251,7 @@
         }
 
        function openBlog(id) {
-    // Convertimos id a número si es necesario
-    const blog = window.cachedBlogs.find(b => b.id == id); // doble = para comparar número/string
-    if (!blog) {
-        alert("Error: no se encontró el blog.");
-        return;
-    }
-
+    const blog = window.cachedBlogs.find(b => b.id === id);
     const detailsContainer = document.getElementById("blogDetails");
     detailsContainer.innerHTML = ""; // limpiar contenido previo
 
@@ -273,39 +267,6 @@
         mediaElement.alt = "Media del blog";
         detailsContainer.appendChild(mediaElement);
     }
-
-    // Contenido
-    const contentParagraph = document.createElement("p");
-    contentParagraph.textContent = blog.content || "Sin contenido";
-    detailsContainer.appendChild(contentParagraph);
-
-    // Autor
-    const authorParagraph = document.createElement("p");
-    authorParagraph.innerHTML = `<strong>Autor:</strong> ${blog.author}`;
-    detailsContainer.appendChild(authorParagraph);
-
-    // Botón cerrar
-    const closeBtn = document.createElement("button");
-    closeBtn.textContent = "Cerrar";
-    closeBtn.onclick = closeBlog;
-    detailsContainer.appendChild(closeBtn);
-
-    // Comentarios
-    const commentSection = document.createElement("div");
-    commentSection.classList.add("comment-section");
-    commentSection.innerHTML = `
-        <h3>Comentarios</h3>
-        <input type="text" id="commentInput${id}" placeholder="Escribe un comentario..." style="width: 100%; padding: 8px;">
-        <button onclick="postComment('${id}')">Comentar</button>
-        <div id="comments${id}"></div>
-    `;
-    detailsContainer.appendChild(commentSection);
-
-    detailsContainer.classList.remove("hidden");
-    document.getElementById("blogsList").classList.add("hidden");
-
-    displayComments(id);
-}
 
     // Contenido
     const contentParagraph = document.createElement("p");
