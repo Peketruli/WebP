@@ -1,5 +1,4 @@
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Blog - Rebeldía IN.AR</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
@@ -26,20 +25,26 @@
       padding: 20px;
       border-radius: 8px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      text-align: center;
     }
-    .blog-list { margin-top: 20px; text-align: center; }
+    .blog-list { margin-top: 20px; }
     .blog-post { border: 1px solid #ddd; padding: 10px; margin: 10px 0; cursor: pointer; background: #f9f9f9; border-radius: 5px; }
-    .blog-form, .blog-details, .warning-message { margin-top: 20px; }
     .hidden { display: none; }
+    .blog-form { margin-top: 20px; }
+    .blog-details { padding: 20px; background: white; margin-top: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    .comment-section { margin-top: 20px; text-align: left; }
     img { max-width: 300px; height: auto; display: block; margin: 10px auto; }
+
     .auth-container, .user-info { position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 10px; }
     .auth-button { padding: 10px 20px; font-size: 1em; color: white; background-color: #333; border: none; cursor: pointer; border-radius: 5px; }
+    .user-info { display: none; cursor: pointer; }
     #userLogo { width: 40px; height: 40px; border-radius: 50%; }
     #userName { font-weight: bold; }
+
     .dropdown-menu { display: none; position: absolute; top: 60px; right: 20px; background: white; color: black; border-radius: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); width: 150px; text-align: left; }
     .dropdown-menu td { padding: 10px; cursor: pointer; }
     .dropdown-menu td:hover { background-color: #ddd; }
-    .warning-message { color: red; font-weight: bold; text-align: center; }
+    .warning-message { color: red; font-weight: bold; text-align: center; margin-top: 20px; }
   </style>
 </head>
 <body>
@@ -64,7 +69,6 @@
   <div class="blog-container">
     <h2>Crear Blog</h2>
     <button onclick="toggleBlogForm()">✏️ Crear Blog</button>
-
     <div id="blogForm" class="blog-form hidden">
       <input type="text" id="blogTitle" placeholder="Título del blog" style="width: 100%; padding: 8px;">
       <textarea id="blogContent" placeholder="Escribe aquí..." style="width: 100%; height: 100px; padding: 8px;"></textarea>
@@ -81,38 +85,31 @@
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
     const SUPABASE_URL = "https://jdvwlfogkzrzovepzjqa.supabase.co";
-    const SUPABASE_KEY = "TU_SUPABASE_KEY";
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-    window.supabase = supabase;
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkdndsZm9na3pyem92ZXB6anFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzY1MjEsImV4cCI6MjA3MzYxMjUyMX0.IwVFrvuluY0tfgE82XnqYSsRjFPsDYnlfyirHjKu1TI";
+    window.supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
     function getCurrentUser() { return JSON.parse(localStorage.getItem("currentUser")) || {}; }
     function isUserLoggedIn() { return !!getCurrentUser().username; }
 
     function toggleBlogForm() {
-      if (!isUserLoggedIn()) {
-        document.getElementById("warningMessage").classList.remove("hidden");
-        return;
-      }
+      if (!isUserLoggedIn()) { document.getElementById("warningMessage").classList.remove("hidden"); return; }
       document.getElementById("warningMessage").classList.add("hidden");
       document.getElementById("blogForm").classList.toggle("hidden");
     }
     window.toggleBlogForm = toggleBlogForm;
 
     async function publishBlog() {
-      if (!isUserLoggedIn()) {
-        document.getElementById("warningMessage").classList.remove("hidden");
-        return;
-      }
+      if (!isUserLoggedIn()) { document.getElementById("warningMessage").classList.remove("hidden"); return; }
       document.getElementById("warningMessage").classList.add("hidden");
 
       const title = document.getElementById("blogTitle").value.trim();
       const content = document.getElementById("blogContent").value.trim();
-      const fileInput = document.getElementById("blogMedia");
       const user = getCurrentUser();
 
       if (!title || !content) { alert("Por favor, completa el título y el contenido."); return; }
 
       let mediaUrl = null;
+      const fileInput = document.getElementById("blogMedia");
       if (fileInput.files.length > 0) {
         const file = fileInput.files[0];
         const fileName = `${Date.now()}_${file.name}`;
@@ -126,43 +123,88 @@
         { title, content, author: user.username || "Anónimo", media: mediaUrl, comments: [] }
       ]);
 
-      if (error) { alert("❌ Error al publicar blog: " + JSON.stringify(error)); return; }
+      if (error) { alert("❌ Error al publicar blog"); console.error(error); return; }
 
-      // Mostrar directamente el blog publicado sin recargar
-      const container = document.getElementById("blogsList");
-      const newBlogHTML = `
-        <div style="text-align:center; margin-top:20px; border:1px solid #ddd; padding:10px; border-radius:5px; background:#f9f9f9;">
-          <h2>${title}</h2>
-          ${mediaUrl ? `<img src="${mediaUrl}" alt="Media del blog">` : ''}
-          <p style="margin-top:10px;">${content}</p>
-          <p><strong>Autor:</strong> ${user.username || "Anónimo"}</p>
-        </div>
-      `;
-      container.innerHTML = newBlogHTML + container.innerHTML;
-
+      // recarga blogs en pantalla
+      await displayBlogs();
       document.getElementById("blogTitle").value = "";
       document.getElementById("blogContent").value = "";
       fileInput.value = "";
+      document.getElementById("blogForm").classList.add("hidden");
     }
     window.publishBlog = publishBlog;
 
     async function displayBlogs() {
       const { data: blogs, error } = await supabase.from("blogs").select("*").order("created_at", { ascending: false });
       if (error) { console.error(error); return; }
-
       const container = document.getElementById("blogsList");
       container.innerHTML = "";
       blogs.forEach(blog => {
-        const blogHTML = `
+        container.innerHTML += `
           <div class="blog-post" onclick='openBlog("${blog.id}")'>
             <h3>${blog.title}</h3>
             <p><strong>Autor:</strong> ${blog.author}</p>
-          </div>
-        `;
-        container.innerHTML += blogHTML;
+          </div>`;
       });
       window.cachedBlogs = blogs;
     }
+
+    function openBlog(id) {
+      const blog = window.cachedBlogs.find(b => String(b.id) === String(id));
+      const detailsContainer = document.getElementById("blogDetails");
+      if (!blog) return alert("Blog no encontrado");
+
+      detailsContainer.innerHTML = `
+        <h2>${blog.title}</h2>
+        ${blog.media ? `<img src="${blog.media}" alt="Media del blog">` : ''}
+        <p>${blog.content}</p>
+        <p><strong>Autor:</strong> ${blog.author}</p>
+        <button onclick="closeBlog()">Cerrar</button>
+        <div class="comment-section">
+          <h3>Comentarios</h3>
+          <input type="text" id="commentInput${id}" placeholder="Escribe un comentario..." style="width: 100%; padding: 8px;">
+          <button onclick="postComment('${id}')">Comentar</button>
+          <div id="comments${id}"></div>
+        </div>`;
+      detailsContainer.classList.remove("hidden");
+      document.getElementById("blogsList").classList.add("hidden");
+      displayComments(id);
+    }
+
+    function closeBlog() {
+      document.getElementById("blogDetails").classList.add("hidden");
+      document.getElementById("blogsList").classList.remove("hidden");
+    }
+
+    async function postComment(blogId) {
+      if (!isUserLoggedIn()) { document.getElementById("warningMessage").classList.remove("hidden"); return; }
+      document.getElementById("warningMessage").classList.add("hidden");
+
+      const commentText = document.getElementById(`commentInput${blogId}`).value.trim();
+      const user = getCurrentUser();
+      if (!commentText) return;
+
+      const { data, error } = await supabase.from("blogs").select("comments").eq("id", blogId).single();
+      if (error) return console.error(error);
+
+      const comments = data.comments || [];
+      comments.push({ author: user.username || "Anónimo", text: commentText });
+
+      await supabase.from("blogs").update({ comments }).eq("id", blogId);
+      displayComments(blogId);
+    }
+
+    async function displayComments(blogId) {
+      const { data, error } = await supabase.from("blogs").select("comments").eq("id", blogId).single();
+      if (error) return console.error(error);
+
+      const commentsContainer = document.getElementById(`comments${blogId}`);
+      const comments = data.comments || [];
+      commentsContainer.innerHTML = comments.map(c => `<p><strong>${c.author}:</strong> ${c.text}</p>`).join("");
+    }
+
+    function goToSettings() { window.location.href = 'ajustes.html'; }
+    function logout() { localStorage.removeItem("currentUser"); window.location.href = 'login.html'; }
 
     function loadUserInfo() {
       const user = getCurrentUser();
@@ -182,9 +224,17 @@
     document.addEventListener("DOMContentLoaded", () => {
       loadUserInfo();
       displayBlogs();
-    });
 
-    function goToSettings() { window.location.href = 'ajustes.html'; }
-    function logout() { localStorage.removeItem("currentUser"); window.location.href = 'login.html'; }
+      const userInfo = document.getElementById("userInfo");
+      const dropdownMenu = document.getElementById("dropdownMenu");
+      userInfo.addEventListener("click", () => {
+        dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
+      });
+      document.addEventListener("click", (event) => {
+        if (!userInfo.contains(event.target) && !dropdownMenu.contains(event.target)) {
+          dropdownMenu.style.display = "none";
+        }
+      });
+    });
   </script>
 </body>
