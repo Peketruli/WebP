@@ -141,35 +141,42 @@
       container.innerHTML = "";
       blogs.forEach(blog => {
         container.innerHTML += `
-          <div class="blog-post" onclick='openBlog("${blog.id}")'>
-            <h3>${blog.title}</h3>
-            <p><strong>Autor:</strong> ${blog.author}</p>
-          </div>`;
+  <div class="blog-post" onclick='openBlog("${blog.id}")'>
+    <h3>${blog.title}</h3>
+    <p><strong>Autor:</strong> ${blog.author}</p>
+  </div>`;
       });
       window.cachedBlogs = blogs;
     }
 
     function openBlog(id) {
-      const blog = window.cachedBlogs.find(b => String(b.id) === String(id));
-      const detailsContainer = document.getElementById("blogDetails");
-      if (!blog) return alert("Blog no encontrado");
+    const blogId = String(id).trim();
+    const blog = window.cachedBlogs.find(b => String(b.id).trim() === blogId);
 
-      detailsContainer.innerHTML = `
+    if (!blog) {
+        alert("❌ Blog no encontrado");
+        return;
+    }
+
+    const detailsContainer = document.getElementById("blogDetails");
+    detailsContainer.innerHTML = `
         <h2>${blog.title}</h2>
         ${blog.media ? `<img src="${blog.media}" alt="Media del blog">` : ''}
-        <p>${blog.content}</p>
+        <p>${blog.content || "Sin contenido"}</p>
         <p><strong>Autor:</strong> ${blog.author}</p>
         <button onclick="closeBlog()">Cerrar</button>
         <div class="comment-section">
-          <h3>Comentarios</h3>
-          <input type="text" id="commentInput${id}" placeholder="Escribe un comentario..." style="width: 100%; padding: 8px;">
-          <button onclick="postComment('${id}')">Comentar</button>
-          <div id="comments${id}"></div>
-        </div>`;
-      detailsContainer.classList.remove("hidden");
-      document.getElementById("blogsList").classList.add("hidden");
-      displayComments(id);
-    }
+            <h3>Comentarios</h3>
+            <input type="text" id="commentInput${blog.id}" placeholder="Escribe un comentario..." style="width: 100%; padding: 8px;">
+            <button onclick="postComment('${blog.id}')">Comentar</button>
+            <div id="comments${blog.id}"></div>
+        </div>
+    `;
+    detailsContainer.classList.remove("hidden");
+    document.getElementById("blogsList").classList.add("hidden");
+
+    displayComments(blog.id);
+}
 
     function closeBlog() {
       document.getElementById("blogDetails").classList.add("hidden");
