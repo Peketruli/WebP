@@ -172,16 +172,15 @@
           <div id="comments${blog.id}"></div>
       </div>
   `;
-  detailsContainer.classList.remove("hidden");       
-  document.getElementById("blogsList").classList.add("hidden");  
-  displayComments(blog.id);                            
+  detailsContainer.classList.remove("hidden");          // mostramos el detalle
+  document.getElementById("blogsList").classList.add("hidden");  // ocultamos la lista
+  displayComments(blog.id);                              // mostramos comentarios
 }
 
 function closeBlog() {
-  document.getElementById("blogDetails").classList.add("hidden"); 
-  document.getElementById("blogsList").classList.remove("hidden"); 
+  document.getElementById("blogDetails").classList.add("hidden"); // ocultamos detalle
+  document.getElementById("blogsList").classList.remove("hidden"); // mostramos lista
 }
-
 
     async function postComment(blogId) {
   if (!isUserLoggedIn()) { 
