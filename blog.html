@@ -251,7 +251,12 @@
         }
 
        function openBlog(id) {
-    const blog = window.cachedBlogs.find(b => b.id === id);
+    const blog = window.cachedBlogs.find(b => b.id == id); // <<== cambio aquí
+    if (!blog) {
+        alert("Error: no se encontró el blog.");
+        return;
+    }
+
     const detailsContainer = document.getElementById("blogDetails");
     detailsContainer.innerHTML = ""; // limpiar contenido previo
 
@@ -300,33 +305,6 @@
 
     displayComments(id);
 }
-
-
-        function closeBlog() {
-            document.getElementById("blogDetails").classList.add("hidden");
-            document.getElementById("blogsList").classList.remove("hidden");
-        }
-
-        async function postComment(blogId) {
-            if (!isUserLoggedIn()) {
-                document.getElementById("warningMessage").classList.remove("hidden");
-                return;
-            }
-            document.getElementById("warningMessage").classList.add("hidden");
-
-            const commentText = document.getElementById(`commentInput${blogId}`).value;
-            const user = getCurrentUser();
-            if (!commentText) return;
-
-            const { data, error } = await supabase.from("blogs").select("comments").eq("id", blogId).single();
-            if (error) return console.error(error);
-
-            const comments = data.comments || [];
-            comments.push({ author: user.username || "Anónimo", text: commentText });
-
-            await supabase.from("blogs").update({ comments }).eq("id", blogId);
-            displayComments(blogId);
-        }
 
         async function displayComments(blogId) {
             const { data, error } = await supabase.from("blogs").select("comments").eq("id", blogId).single();
