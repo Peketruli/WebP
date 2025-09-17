@@ -250,29 +250,54 @@
             window.cachedBlogs = blogs;
         }
 
-        function openBlog(id) {
+       function openBlog(id) {
     const blog = window.cachedBlogs.find(b => b.id === id);
     const detailsContainer = document.getElementById("blogDetails");
+    detailsContainer.innerHTML = ""; // limpiar contenido previo
 
-    let mediaHTML = '';
+    // Título
+    const title = document.createElement("h2");
+    title.textContent = blog.title;
+    detailsContainer.appendChild(title);
+
+    // Media
     if (blog.media) {
-        mediaHTML = `<img src="${blog.media}" alt="Media del blog">`;
+        const mediaElement = document.createElement("img");
+        mediaElement.src = blog.media;
+        mediaElement.alt = "Media del blog";
+        detailsContainer.appendChild(mediaElement);
     }
 
-    detailsContainer.innerHTML = `<h2>${blog.title}</h2>
-        ${mediaHTML}
-        <p>${blog.content}</p>
-        <p><strong>Autor:</strong> ${blog.author}</p>
-        <button onclick="closeBlog()">Cerrar</button>
-        <div class="comment-section">
-            <h3>Comentarios</h3>
-            <input type="text" id="commentInput${id}" placeholder="Escribe un comentario..." style="width: 100%; padding: 8px;">
-            <button onclick="postComment('${id}')">Comentar</button>
-            <div id="comments${id}"></div>
-        </div>`;
+    // Contenido
+    const contentParagraph = document.createElement("p");
+    contentParagraph.textContent = blog.content || "Sin contenido";
+    detailsContainer.appendChild(contentParagraph);
+
+    // Autor
+    const authorParagraph = document.createElement("p");
+    authorParagraph.innerHTML = `<strong>Autor:</strong> ${blog.author}`;
+    detailsContainer.appendChild(authorParagraph);
+
+    // Botón cerrar
+    const closeBtn = document.createElement("button");
+    closeBtn.textContent = "Cerrar";
+    closeBtn.onclick = closeBlog;
+    detailsContainer.appendChild(closeBtn);
+
+    // Comentarios
+    const commentSection = document.createElement("div");
+    commentSection.classList.add("comment-section");
+    commentSection.innerHTML = `
+        <h3>Comentarios</h3>
+        <input type="text" id="commentInput${id}" placeholder="Escribe un comentario..." style="width: 100%; padding: 8px;">
+        <button onclick="postComment('${id}')">Comentar</button>
+        <div id="comments${id}"></div>
+    `;
+    detailsContainer.appendChild(commentSection);
 
     detailsContainer.classList.remove("hidden");
     document.getElementById("blogsList").classList.add("hidden");
+
     displayComments(id);
 }
 
