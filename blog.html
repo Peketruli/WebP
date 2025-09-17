@@ -2,49 +2,26 @@
   <title>Blog - Rebeldía IN.AR</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
-    body {
-      background: linear-gradient(45deg, #FF5733, #FF8D1A, #FFC300, #FF5733);
-      background-size: 400% 400%;
-      animation: gradientBG 10s ease infinite;
-      color: black;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 50px;
-      position: relative;
-      margin-bottom: 100px;
-    }
-    @keyframes gradientBG {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    .blog-container {
-      max-width: 800px;
-      margin: auto;
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      text-align: center;
-    }
+    body { background: linear-gradient(45deg, #FF5733, #FF8D1A, #FFC300, #FF5733); background-size: 400% 400%; animation: gradientBG 10s ease infinite; color: black; font-family: Arial, sans-serif; text-align: center; padding: 50px; position: relative; margin-bottom: 100px; }
+    @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+    .blog-container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); text-align: center; }
     .blog-list { margin-top: 20px; }
     .blog-post { border: 1px solid #ddd; padding: 10px; margin: 10px 0; cursor: pointer; background: #f9f9f9; border-radius: 5px; }
     .hidden { display: none; }
     .blog-form { margin-top: 20px; }
-    .blog-details { padding: 20px; background: white; margin-top: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    .blog-details { padding: 20px; background: white; margin-top: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); text-align: left; }
     .comment-section { margin-top: 20px; text-align: left; }
     img { max-width: 300px; height: auto; display: block; margin: 10px auto; }
-
     .auth-container, .user-info { position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 10px; }
     .auth-button { padding: 10px 20px; font-size: 1em; color: white; background-color: #333; border: none; cursor: pointer; border-radius: 5px; }
     .user-info { display: none; cursor: pointer; }
     #userLogo { width: 40px; height: 40px; border-radius: 50%; }
     #userName { font-weight: bold; }
-
     .dropdown-menu { display: none; position: absolute; top: 60px; right: 20px; background: white; color: black; border-radius: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); width: 150px; text-align: left; }
     .dropdown-menu td { padding: 10px; cursor: pointer; }
     .dropdown-menu td:hover { background-color: #ddd; }
     .warning-message { color: red; font-weight: bold; text-align: center; margin-top: 20px; }
+    #debug { color: #7b0b0b; background: #ffecec; border: 1px solid #ffb6b6; padding: 8px; margin: 12px auto; max-width: 800px; text-align: left; display: none; white-space: pre-wrap; }
   </style>
 </head>
 <body>
@@ -66,6 +43,8 @@
     </table>
   </div>
 
+  <div id="debug"></div>
+
   <div class="blog-container">
     <h2>Crear Blog</h2>
     <button onclick="toggleBlogForm()">✏️ Crear Blog</button>
@@ -84,9 +63,17 @@
 
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
     const SUPABASE_URL = "https://jdvwlfogkzrzovepzjqa.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkdndsZm9na3pyem92ZXB6anFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzY1MjEsImV4cCI6MjA3MzYxMjUyMX0.IwVFrvuluY0tfgE82XnqYSsRjFPsDYnlfyirHjKu1TI";
+    const SUPABASE_KEY = "<PEGA_AQUI_TU_ANON_KEY>"; // <- reemplaza por tu anon key si aún usas service_role en el código de antes
     window.supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    function showDebug(msg) {
+      const d = document.getElementById('debug');
+      d.style.display = 'block';
+      d.textContent = typeof msg === 'string' ? msg : JSON.stringify(msg, null, 2);
+    }
+    function hideDebug() { document.getElementById('debug').style.display = 'none'; }
 
     function getCurrentUser() { return JSON.parse(localStorage.getItem("currentUser")) || {}; }
     function isUserLoggedIn() { return !!getCurrentUser().username; }
@@ -99,6 +86,7 @@
     window.toggleBlogForm = toggleBlogForm;
 
     async function publishBlog() {
+      hideDebug();
       if (!isUserLoggedIn()) { document.getElementById("warningMessage").classList.remove("hidden"); return; }
       document.getElementById("warningMessage").classList.add("hidden");
 
@@ -114,7 +102,7 @@
         const file = fileInput.files[0];
         const fileName = `${Date.now()}_${file.name}`;
         const { error: uploadError } = await supabase.storage.from('blog-media').upload(fileName, file);
-        if (uploadError) { alert("❌ Error al subir el archivo: " + uploadError.message); return; }
+        if (uploadError) { showDebug("Error subida media:\n" + JSON.stringify(uploadError, null, 2)); return; }
         const { publicURL } = supabase.storage.from('blog-media').getPublicUrl(fileName);
         mediaUrl = publicURL;
       }
@@ -123,9 +111,8 @@
         { title, content, author: user.username || "Anónimo", media: mediaUrl, comments: [] }
       ]);
 
-      if (error) { alert("❌ Error al publicar blog"); console.error(error); return; }
+      if (error) { showDebug({ stage: "insert", error }); return; }
 
-      // recarga blogs en pantalla
       await displayBlogs();
       document.getElementById("blogTitle").value = "";
       document.getElementById("blogContent").value = "";
@@ -135,48 +122,68 @@
     window.publishBlog = publishBlog;
 
     async function displayBlogs() {
+      hideDebug();
       const { data: blogs, error } = await supabase.from("blogs").select("*").order("created_at", { ascending: false });
-      if (error) { console.error(error); return; }
+      if (error) { showDebug({ stage: "select blogs", error }); return; }
       const container = document.getElementById("blogsList");
       container.innerHTML = "";
       blogs.forEach(blog => {
+        // usa onclick con single quotes para evitar conflictos
         container.innerHTML += `
-  <div class="blog-post" onclick='openBlog("${blog.id}")'>
-    <h3>${blog.title}</h3>
-    <p><strong>Autor:</strong> ${blog.author}</p>
-  </div>`;
+          <div class="blog-post" onclick="openBlog('${blog.id}')">
+            <h3 style="text-align:center">${blog.title}</h3>
+            <p style="text-align:center"><strong>Autor:</strong> ${blog.author}</p>
+          </div>`;
       });
-      window.cachedBlogs = blogs;
+      window.cachedBlogs = blogs || [];
+    }
+
+    // parseComments: normaliza lo que venga de la BD a un array seguro
+    function parseComments(raw) {
+      if (!raw) return [];
+      if (Array.isArray(raw)) return raw;
+      if (typeof raw === 'string') {
+        try { const p = JSON.parse(raw); return Array.isArray(p) ? p : []; } catch(e) { return []; }
+      }
+      if (typeof raw === 'object') {
+        // objeto vacío => []
+        if (Object.keys(raw).length === 0) return [];
+        // si viene como object con keys numéricas convierte a array
+        const maybeArray = Object.keys(raw).map(k => raw[k]).filter(v => v !== undefined);
+        if (maybeArray.length) return maybeArray;
+        return [];
+      }
+      return [];
     }
 
     function openBlog(id) {
-    const blogId = String(id).trim();
-    const blog = window.cachedBlogs.find(b => String(b.id).trim() === blogId);
+      hideDebug();
+      const blogId = String(id).trim();
+      const blog = (window.cachedBlogs || []).find(b => String(b.id).trim() === blogId);
+      if (!blog) { showDebug("Blog no encontrado en cache. Intenta recargar la página o comprobar displayBlogs()"); return; }
 
-    if (!blog) {
-        alert("❌ Blog no encontrado");
-        return;
-    }
-
-    const detailsContainer = document.getElementById("blogDetails");
-    detailsContainer.innerHTML = `
-        <h2>${blog.title}</h2>
-        ${blog.media ? `<img src="${blog.media}" alt="Media del blog">` : ''}
-        <p>${blog.content || "Sin contenido"}</p>
-        <p><strong>Autor:</strong> ${blog.author}</p>
-        <button onclick="closeBlog()">Cerrar</button>
-        <div class="comment-section">
-            <h3>Comentarios</h3>
-            <input type="text" id="commentInput${blog.id}" placeholder="Escribe un comentario..." style="width: 100%; padding: 8px;">
-            <button onclick="postComment('${blog.id}')">Comentar</button>
-            <div id="comments${blog.id}"></div>
+      const detailsContainer = document.getElementById("blogDetails");
+      detailsContainer.innerHTML = `
+        <div style="text-align:center">
+          <h2 style="text-align:center">${escapeHtml(blog.title)}</h2>
+          ${blog.media ? `<img src="${escapeHtml(blog.media)}" alt="Media del blog">` : ''}
         </div>
-    `;
-    detailsContainer.classList.remove("hidden");
-    document.getElementById("blogsList").classList.add("hidden");
+        <div style="padding-top:10px"><p>${escapeHtml(blog.content || "Sin contenido")}</p></div>
+        <p><strong>Autor:</strong> ${escapeHtml(blog.author)}</p>
+        <button onclick="closeBlog()">Cerrar</button>
+        <div class="comment-section" style="margin-top:16px">
+          <h3>Comentarios</h3>
+          <input type="text" id="commentInput${blog.id}" placeholder="Escribe un comentario..." style="width: 100%; padding: 8px;">
+          <button onclick="postComment('${blog.id}')">Comentar</button>
+          <div id="comments${blog.id}" style="margin-top:8px"></div>
+        </div>
+      `;
+      detailsContainer.classList.remove("hidden");
+      document.getElementById("blogsList").classList.add("hidden");
 
-    displayComments(blog.id);
-}
+      displayComments(blog.id);
+    }
+    window.openBlog = openBlog;
 
     function closeBlog() {
       document.getElementById("blogDetails").classList.add("hidden");
@@ -184,62 +191,67 @@
     }
 
     async function postComment(blogId) {
-  if (!isUserLoggedIn()) { 
-    document.getElementById("warningMessage").classList.remove("hidden"); 
-    return; 
-  }
-  document.getElementById("warningMessage").classList.add("hidden");
+      hideDebug();
+      if (!isUserLoggedIn()) { document.getElementById("warningMessage").classList.remove("hidden"); return; }
+      document.getElementById("warningMessage").classList.add("hidden");
 
-  const commentText = document.getElementById(`commentInput${blogId}`).value.trim();
-  const user = getCurrentUser();
-  if (!commentText) return;
+      const inputEl = document.getElementById(`commentInput${blogId}`);
+      if (!inputEl) { showDebug("Input de comentario no encontrado en DOM"); return; }
+      const commentText = inputEl.value.trim();
+      const user = getCurrentUser();
+      if (!commentText) return;
 
-  // Obtener comentarios actuales
-  const { data, error } = await supabase
-    .from("blogs")
-    .select("comments")
-    .eq("id", blogId)
-    .single();
+      // obtener comentarios actuales
+      const { data, error } = await supabase.from("blogs").select("comments").eq("id", blogId).single();
+      if (error) { showDebug({ stage: "select comments before update", error }); return; }
 
-  if (error) return console.error(error);
+      const existing = parseComments(data?.comments);
+      existing.push({ author: user.username || "Anónimo", text: commentText, created_at: new Date().toISOString() });
 
-let comments = Array.isArray(data.comments) ? data.comments : [];
-comments.push({ author: user.username || "Anónimo", text: commentText });
+      // actualizar en BD (sin traer toda la fila)
+      const { error: updateError } = await supabase.from("blogs").update({ comments: existing }).eq("id", blogId);
+      if (updateError) { showDebug({ stage: "update comments", updateError }); return; }
 
+      // actualizar cache local si existe
+      if (window.cachedBlogs) {
+        const idx = window.cachedBlogs.findIndex(b => String(b.id) === String(blogId));
+        if (idx !== -1) window.cachedBlogs[idx].comments = existing;
+      }
 
-document.getElementById(`commentInput${blogId}`).value = "";
+      inputEl.value = ""; // limpiar input
+      displayComments(blogId);
+    }
+    window.postComment = postComment;
 
+    async function displayComments(blogId) {
+      hideDebug();
+      const commentsContainer = document.getElementById(`comments${blogId}`);
+      if (!commentsContainer) { showDebug("Contenedor de comentarios no encontrado: comments" + blogId); return; }
 
-  const { error: updateError } = await supabase
-    .from("blogs")
-    .update({ comments })
-    .eq("id", blogId);
+      commentsContainer.innerHTML = "<p>Cargando comentarios...</p>";
+      const { data, error } = await supabase.from("blogs").select("comments").eq("id", blogId).single();
 
-  if (updateError) return console.error(updateError);
+      if (error) {
+        commentsContainer.innerHTML = "<p>No se pudieron cargar los comentarios.</p>";
+        showDebug({ stage: "select comments", error });
+        return;
+      }
 
-  displayComments(blogId);
-}
+      const comments = parseComments(data?.comments);
+      if (comments.length === 0) {
+        commentsContainer.innerHTML = "<p>No hay comentarios todavía.</p>";
+        return;
+      }
 
-async function displayComments(blogId) {
-  const { data, error } = await supabase
-    .from("blogs")
-    .select("comments")
-    .eq("id", blogId)
-    .single();
+      commentsContainer.innerHTML = comments.map(c => `<div style="padding:6px 0; border-bottom: 1px solid #eee"><strong>${escapeHtml(c.author || 'Anónimo')}:</strong> ${escapeHtml(c.text || '')}</div>`).join("");
+    }
 
-  if (error) return console.error(error);
+    // pequeño escape para evitar HTML injection en el front (display seguro)
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str).replace(/[&<>"']/g, function (m) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]; });
+    }
 
-  const commentsContainer = document.getElementById(`comments${blogId}`);
-  const comments = Array.isArray(data.comments) ? data.comments : [];
-
-  if (comments.length === 0) {
-    commentsContainer.innerHTML = "<p>No hay comentarios todavía.</p>";
-  } else {
-    commentsContainer.innerHTML = comments
-      .map(c => `<p><strong>${c.author}:</strong> ${c.text}</p>`)
-      .join("");
-  }
-}
     function goToSettings() { window.location.href = 'ajustes.html'; }
     function logout() { localStorage.removeItem("currentUser"); window.location.href = 'login.html'; }
 
@@ -247,7 +259,7 @@ async function displayComments(blogId) {
       const user = getCurrentUser();
       const authContainer = document.getElementById("authContainer");
       const userInfo = document.getElementById("userInfo");
-      if (user.username) {
+      if (user && user.username) {
         userInfo.style.display = "flex";
         authContainer.style.display = "none";
         document.getElementById("userName").textContent = user.username;
@@ -258,19 +270,16 @@ async function displayComments(blogId) {
       }
     }
 
+    // arranque
     document.addEventListener("DOMContentLoaded", () => {
       loadUserInfo();
       displayBlogs();
 
       const userInfo = document.getElementById("userInfo");
       const dropdownMenu = document.getElementById("dropdownMenu");
-      userInfo.addEventListener("click", () => {
-        dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
-      });
+      userInfo.addEventListener("click", () => dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block");
       document.addEventListener("click", (event) => {
-        if (!userInfo.contains(event.target) && !dropdownMenu.contains(event.target)) {
-          dropdownMenu.style.display = "none";
-        }
+        if (!userInfo.contains(event.target) && !dropdownMenu.contains(event.target)) dropdownMenu.style.display = "none";
       });
     });
   </script>
