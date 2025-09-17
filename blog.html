@@ -315,14 +315,75 @@
 
 
         async function displayComments(blogId) {
-            const { data, error } = await supabase.from("blogs").select("comments").eq("id", blogId).single();
-            if (error) return console.error(error);
+    const commentsContainer = document.getElementById(`comments${blogId}`);
+    commentsContainer.innerHTML = "Cargando comentarios...";
 
-            const comments = data.comments || [];
-            const commentsContainer = document.getElementById(`comments${blogId}`);
-            commentsContainer.innerHTML = comments.map(c => `<p><strong>${c.author}:</strong> ${c.text}</p>`).join("");
-        }
+    const { data, error } = await supabase
+        .from("blogs")
+        .select("comments")
+        .eq("id", blogId)
+        .single();
 
+    if (error || !data) {
+        commentsContainer.innerHTML = "No se pudieron cargar los comentarios.";
+        return;
+    }
+
+    // Asegurarnos de que sea un array
+    const comments = Array.isArray(data.comments) ? data.comments : [];
+
+    if (comments.length === 0) {
+        commentsContainer.innerHTML = "<p>Aún no hay comentarios.</p>";
+        return;
+    }
+
+    // Mostrar comentarios
+    commentsContainer.innerHTML = comments
+        .map(c => `<p><strong>${c.author}:</strong> ${c.text}</p>`)
+        .join("");
+}
+
+async function postComment(blogId) {
+    if (!isUserLoggedIn()) {
+        document.getElementById("warningMessage").classList.remove("hidden");
+        return;
+    }
+    document.getElementById("warningMessage").classList.add("hidden");
+
+    const commentInput = document.getElementById(`commentInput${blogId}`);
+    const commentText = commentInput.value.trim();
+    if (!commentText) return;
+
+    const user = getCurrentUser();
+
+    // Primero obtenemos los comentarios actuales
+    const { data, error } = await supabase
+        .from("blogs")
+        .select("comments")
+        .eq("id", blogId)
+        .single();
+
+    if (error || !data) return;
+
+    const comments = Array.isArray(data.comments) ? data.comments : [];
+    comments.push({ author: user.username || "Anónimo", text: commentText });
+
+    // Actualizamos en Supabase
+    const { error: updateError } = await supabase
+        .from("blogs")
+        .update({ comments })
+        .eq("id", blogId);
+
+    if (updateError) {
+        alert("❌ No se pudo publicar el comentario.");
+        return;
+    }
+
+    commentInput.value = ""; // limpiar input
+    displayComments(blogId); // recargar comentarios
+}
+
+        
         function goToSettings() { window.location.href = 'ajustes.html'; }
         function logout() {
             localStorage.removeItem("currentUser");
