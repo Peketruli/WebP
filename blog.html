@@ -213,7 +213,7 @@
     }
 
     const { error } = await supabase.from("blogs").insert([
-        { title, content, author: user.username || "Anónimo", media: mediaUrl, comments: [] }
+    { title, content, author: user.username || "Anónimo", media: mediaUrl, comments: [] }
     ]);
 
     if (error) {
@@ -227,9 +227,9 @@
 
         async function displayBlogs() {
             const { data: blogs, error } = await supabase
-                .from("blogs")
-                .select("*")
-                .order("created_at", { ascending: false });
+        .from("blogs")
+        .select("*")
+        .order("created_at", { ascending: false });
 
             if (error) {
                 console.error(error);
@@ -251,14 +251,21 @@
         }
 
        function openBlog(id) {
-    const blog = window.cachedBlogs.find(b => b.id == id); // <<== cambio aquí
-    if (!blog) {
-        alert("Error: no se encontró el blog.");
-        return;
-    }
+    // Convertir a string para evitar problemas de tipos
+    const blog = window.cachedBlogs.find(b => String(b.id) === String(id));
 
     const detailsContainer = document.getElementById("blogDetails");
     detailsContainer.innerHTML = ""; // limpiar contenido previo
+
+    if (!blog) {
+        // Mostrar mensaje de error directamente en la web
+        const errorMsg = document.createElement("p");
+        errorMsg.textContent = "❌ Error: no se pudo cargar el blog.";
+        detailsContainer.appendChild(errorMsg);
+        detailsContainer.classList.remove("hidden");
+        document.getElementById("blogsList").classList.add("hidden");
+        return;
+    }
 
     // Título
     const title = document.createElement("h2");
@@ -305,6 +312,7 @@
 
     displayComments(id);
 }
+
 
         async function displayComments(blogId) {
             const { data, error } = await supabase.from("blogs").select("comments").eq("id", blogId).single();
