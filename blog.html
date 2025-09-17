@@ -176,34 +176,34 @@
         }
         window.toggleBlogForm = toggleBlogForm;
 
-        async function publishBlog() {
-            if (!isUserLoggedIn()) {
-                document.getElementById("warningMessage").classList.remove("hidden");
-                return;
-            }
-            document.getElementById("warningMessage").classList.add("hidden");
+    async function publishBlog() {
+    if (!isUserLoggedIn()) {
+        document.getElementById("warningMessage").classList.remove("hidden");
+        return;
+    }
+    document.getElementById("warningMessage").classList.add("hidden");
 
-            const title = document.getElementById("blogTitle").value;
-            const content = document.getElementById("blogContent").value;
-            const user = getCurrentUser();
+    const title = document.getElementById("blogTitle").value;
+    const content = document.getElementById("blogContent").value;
+    const user = getCurrentUser();
 
-            if (!title || !content) {
-                alert("Por favor, completa el título y el contenido.");
-                return;
-            }
+    if (!title || !content) {
+        alert("Por favor, completa el título y el contenido.");
+        return;
+    }
 
-            const { error } = await supabase.from("blogs").insert([
-                { title, content, author: user.username || "Anónimo", comments: [] }
-            ]);
+    const { error } = await supabase.from("blogs").insert([
+        { title, content, author: user.username || "Anónimo", comments: [] }
+    ]);
 
-            if (error) {
-                console.error(error);
-                alert("❌ Error al publicar blog");
-            } else {
-                alert("✅ Blog publicado!");
-                location.reload();
-            }
-        }
+    if (error) {
+        alert("❌ Error al publicar blog: " + JSON.stringify(error, null, 2));
+    } else {
+        alert("✅ Blog publicado!");
+        location.reload();
+    }
+}
+
         window.publishBlog = publishBlog;
 
         async function displayBlogs() {
