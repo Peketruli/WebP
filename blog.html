@@ -135,20 +135,19 @@
     window.publishBlog = publishBlog;
 
     async function displayBlogs() {
-      const { data: blogs, error } = await supabase.from("blogs").select("*").order("created_at", { ascending: false });
-      if (error) { console.error(error); return; }
-      const container = document.getElementById("blogsList");
-      container.innerHTML = "";
-      blogs.forEach(blog => {
-  container.innerHTML += `
-    <div class="blog-post" onclick='openBlog("${blog.id}")'>
-      <h3>${blog.title}</h3>
-      <p>${blog.content || "Sin contenido"}</p>
-      <p><strong>Autor:</strong> ${blog.author}</p>
-    </div>`;
-});
-      window.cachedBlogs = blogs;
-    }
+  const { data: blogs, error } = await supabase.from("blogs").select("*").order("created_at", { ascending: false });
+  if (error) { console.error(error); return; }
+  const container = document.getElementById("blogsList");
+  container.innerHTML = "";
+  blogs.forEach(blog => {
+    container.innerHTML += `
+      <div class="blog-post" onclick='openBlog("${blog.id}")'>
+        <h3>${blog.title}</h3>
+        <p><strong>Autor:</strong> ${blog.author}</p>
+      </div>`;
+  });
+  window.cachedBlogs = blogs;
+}
 
     function openBlog(id) {
     const blogId = String(id).trim();
