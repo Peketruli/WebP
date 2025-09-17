@@ -203,9 +203,12 @@
 
   if (error) return console.error(error);
 
-  // Asegurarse de que comments sea siempre un array
-  let comments = Array.isArray(data.comments) ? data.comments : [];
-  comments.push({ author: user.username || "Anónimo", text: commentText });
+let comments = Array.isArray(data.comments) ? data.comments : [];
+comments.push({ author: user.username || "Anónimo", text: commentText });
+
+
+document.getElementById(`commentInput${blogId}`).value = "";
+
 
   const { error: updateError } = await supabase
     .from("blogs")
@@ -228,11 +231,15 @@ async function displayComments(blogId) {
 
   const commentsContainer = document.getElementById(`comments${blogId}`);
   const comments = Array.isArray(data.comments) ? data.comments : [];
-  commentsContainer.innerHTML = comments
-    .map(c => `<p><strong>${c.author}:</strong> ${c.text}</p>`)
-    .join("");
-}
 
+  if (comments.length === 0) {
+    commentsContainer.innerHTML = "<p>No hay comentarios todavía.</p>";
+  } else {
+    commentsContainer.innerHTML = comments
+      .map(c => `<p><strong>${c.author}:</strong> ${c.text}</p>`)
+      .join("");
+  }
+}
     function goToSettings() { window.location.href = 'ajustes.html'; }
     function logout() { localStorage.removeItem("currentUser"); window.location.href = 'login.html'; }
 
