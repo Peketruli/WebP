@@ -185,6 +185,7 @@
 
     const title = document.getElementById("blogTitle").value;
     const content = document.getElementById("blogContent").value;
+    const fileInput = document.getElementById("blogMedia");
     const user = getCurrentUser();
 
     if (!title || !content) {
@@ -192,8 +193,27 @@
         return;
     }
 
+    let mediaUrl = null;
+
+    if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const fileName = `${Date.now()}_${file.name}`;
+        const { data, error: uploadError } = await supabase.storage
+            .from('blog-media') // Nombre del bucket que debes crear en Supabase
+            .upload(fileName, file);
+
+        if (uploadError) {
+            alert("❌ Error al subir el archivo: " + uploadError.message);
+            return;
+        }
+
+        // Obtener URL pública del archivo
+        const { publicURL } = supabase.storage.from('blog-media').getPublicUrl(fileName);
+        mediaUrl = publicURL;
+    }
+
     const { error } = await supabase.from("blogs").insert([
-        { title, content, author: user.username || "Anónimo", comments: [] }
+        { title, content, author: user.username || "Anónimo", media: mediaUrl, comments: [] }
     ]);
 
     if (error) {
@@ -203,7 +223,6 @@
         location.reload();
     }
 }
-
         window.publishBlog = publishBlog;
 
         async function displayBlogs() {
@@ -232,24 +251,31 @@
         }
 
         function openBlog(id) {
-            const blog = window.cachedBlogs.find(b => b.id === id);
-            const detailsContainer = document.getElementById("blogDetails");
+    const blog = window.cachedBlogs.find(b => b.id === id);
+    const detailsContainer = document.getElementById("blogDetails");
 
-            detailsContainer.innerHTML = `<h2>${blog.title}</h2>
-                <p>${blog.content}</p>
-                <p><strong>Autor:</strong> ${blog.author}</p>
-                <button onclick="closeBlog()">Cerrar</button>
-                <div class="comment-section">
-                    <h3>Comentarios</h3>
-                    <input type="text" id="commentInput${id}" placeholder="Escribe un comentario..." style="width: 100%; padding: 8px;">
-                    <button onclick="postComment('${id}')">Comentar</button>
-                    <div id="comments${id}"></div>
-                </div>`;
+    let mediaHTML = '';
+    if (blog.media) {
+        mediaHTML = `<img src="${blog.media}" alt="Media del blog">`;
+    }
 
-            detailsContainer.classList.remove("hidden");
-            document.getElementById("blogsList").classList.add("hidden");
-            displayComments(id);
-        }
+    detailsContainer.innerHTML = `<h2>${blog.title}</h2>
+        ${mediaHTML}
+        <p>${blog.content}</p>
+        <p><strong>Autor:</strong> ${blog.author}</p>
+        <button onclick="closeBlog()">Cerrar</button>
+        <div class="comment-section">
+            <h3>Comentarios</h3>
+            <input type="text" id="commentInput${id}" placeholder="Escribe un comentario..." style="width: 100%; padding: 8px;">
+            <button onclick="postComment('${id}')">Comentar</button>
+            <div id="comments${id}"></div>
+        </div>`;
+
+    detailsContainer.classList.remove("hidden");
+    document.getElementById("blogsList").classList.add("hidden");
+    displayComments(id);
+}
+
 
         function closeBlog() {
             document.getElementById("blogDetails").classList.add("hidden");
