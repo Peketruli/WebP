@@ -183,8 +183,8 @@
     }
     document.getElementById("warningMessage").classList.add("hidden");
 
-    const title = document.getElementById("blogTitle").value;
-    const content = document.getElementById("blogContent").value;
+    const title = document.getElementById("blogTitle").value.trim();
+    const content = document.getElementById("blogContent").value.trim();
     const fileInput = document.getElementById("blogMedia");
     const user = getCurrentUser();
 
@@ -194,12 +194,11 @@
     }
 
     let mediaUrl = null;
-
     if (fileInput.files.length > 0) {
         const file = fileInput.files[0];
         const fileName = `${Date.now()}_${file.name}`;
         const { data, error: uploadError } = await supabase.storage
-            .from('blog-media') // Nombre del bucket que debes crear en Supabase
+            .from('blog-media')
             .upload(fileName, file);
 
         if (uploadError) {
@@ -207,55 +206,42 @@
             return;
         }
 
-        // Obtener URL pública del archivo
         const { publicURL } = supabase.storage.from('blog-media').getPublicUrl(fileName);
         mediaUrl = publicURL;
     }
 
+    // Insertar blog en Supabase
     const { error } = await supabase.from("blogs").insert([
-    { 
-        title, 
-        content, 
-        author: user.username || "Anónimo", 
-        media: mediaUrl, 
-        comments: JSON.stringify([]) // forzar array vacío como string
-    }
-]);
-
+        { 
+            title, 
+            content, 
+            author: user.username || "Anónimo", 
+            media: mediaUrl, 
+            comments: JSON.stringify([]) // array vacío
+        }
+    ]);
 
     if (error) {
         alert("❌ Error al publicar blog: " + JSON.stringify(error, null, 2));
-    } else {
-        alert("✅ Blog publicado!");
-        location.reload();
+        return;
     }
+
+    // Mostrar directamente el blog publicado en la página
+    const container = document.getElementById("blogsList");
+    container.innerHTML = `
+        <div style="text-align: center; margin-top: 20px;">
+            <h2>${title}</h2>
+            ${mediaUrl ? `<img src="${mediaUrl}" alt="Media del blog" style="max-width:300px; display:block; margin: 10px auto;">` : ''}
+            <p style="margin-top: 10px;">${content}</p>
+        </div>
+    `;
+
+    // Limpiar formulario
+    document.getElementById("blogTitle").value = "";
+    document.getElementById("blogContent").value = "";
+    fileInput.value = "";
 }
-        window.publishBlog = publishBlog;
 
-        async function displayBlogs() {
-            const { data: blogs, error } = await supabase
-        .from("blogs")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-            if (error) {
-                console.error(error);
-                return;
-            }
-
-            const container = document.getElementById("blogsList");
-            container.innerHTML = "";
-
-            blogs.forEach(blog => {
-                const blogElement = `<div class='blog-post' onclick='openBlog("${blog.id}")'>
-                    <h3>${blog.title}</h3>
-                    <p><strong>Autor:</strong> ${blog.author}</p>
-                </div>`;
-                container.innerHTML += blogElement;
-            });
-
-            window.cachedBlogs = blogs;
-        }
 
        function openBlog(id) {
     // Convertir a string para evitar problemas de tipos
