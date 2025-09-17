@@ -135,17 +135,28 @@
     window.publishBlog = publishBlog;
 
     async function displayBlogs() {
-  const { data: blogs, error } = await supabase.from("blogs").select("*").order("created_at", { ascending: false });
-  if (error) { console.error(error); return; }
+  const { data: blogs, error } = await supabase
+    .from("blogs")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) { 
+    console.error(error); 
+    return; 
+  }
+
   const container = document.getElementById("blogsList");
   container.innerHTML = "";
+
   blogs.forEach(blog => {
     container.innerHTML += `
-      <div class="blog-post" onclick='openBlog("${blog.id}")'>
+      <div class="blog-post" onclick="openBlog('${blog.id}')">
         <h3>${blog.title}</h3>
         <p><strong>Autor:</strong> ${blog.author}</p>
       </div>`;
   });
+
+  // Guardamos blogs en memoria para abrirlos luego
   window.cachedBlogs = blogs;
 }
 
@@ -157,6 +168,7 @@
       alert("❌ Blog no encontrado");
       return;
   }
+
 
   const detailsContainer = document.getElementById("blogDetails");
   detailsContainer.innerHTML = `
@@ -172,14 +184,15 @@
           <div id="comments${blog.id}"></div>
       </div>
   `;
-  detailsContainer.classList.remove("hidden");          // mostramos el detalle
-  document.getElementById("blogsList").classList.add("hidden");  // ocultamos la lista
-  displayComments(blog.id);                              // mostramos comentarios
+  detailsContainer.classList.remove("hidden");
+  document.getElementById("blogsList").classList.add("hidden");
+
+  displayComments(blog.id);
 }
 
 function closeBlog() {
-  document.getElementById("blogDetails").classList.add("hidden"); // ocultamos detalle
-  document.getElementById("blogsList").classList.remove("hidden"); // mostramos lista
+  document.getElementById("blogDetails").classList.add("hidden");
+  document.getElementById("blogsList").classList.remove("hidden");
 }
 
     async function postComment(blogId) {
