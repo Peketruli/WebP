@@ -316,7 +316,6 @@
 
         async function displayComments(blogId) {
     const commentsContainer = document.getElementById(`comments${blogId}`);
-    commentsContainer.innerHTML = "Cargando comentarios...";
 
     const { data, error } = await supabase
         .from("blogs")
@@ -325,11 +324,11 @@
         .single();
 
     if (error || !data) {
-        commentsContainer.innerHTML = "No se pudieron cargar los comentarios.";
+        commentsContainer.innerHTML = "<p>No se pudieron cargar los comentarios.</p>";
         return;
     }
 
-    // Asegurarnos de que sea un array
+    // Asegurarse de que comments sea un array
     const comments = Array.isArray(data.comments) ? data.comments : [];
 
     if (comments.length === 0) {
@@ -337,11 +336,11 @@
         return;
     }
 
-    // Mostrar comentarios
     commentsContainer.innerHTML = comments
         .map(c => `<p><strong>${c.author}:</strong> ${c.text}</p>`)
         .join("");
 }
+
 
 async function postComment(blogId) {
     if (!isUserLoggedIn()) {
@@ -352,11 +351,10 @@ async function postComment(blogId) {
 
     const commentInput = document.getElementById(`commentInput${blogId}`);
     const commentText = commentInput.value.trim();
+    const user = getCurrentUser();
     if (!commentText) return;
 
-    const user = getCurrentUser();
-
-    // Primero obtenemos los comentarios actuales
+    // Traer comentarios actuales
     const { data, error } = await supabase
         .from("blogs")
         .select("comments")
@@ -368,20 +366,18 @@ async function postComment(blogId) {
     const comments = Array.isArray(data.comments) ? data.comments : [];
     comments.push({ author: user.username || "Anónimo", text: commentText });
 
-    // Actualizamos en Supabase
+    // Actualizar en la base de datos
     const { error: updateError } = await supabase
         .from("blogs")
         .update({ comments })
         .eq("id", blogId);
 
-    if (updateError) {
-        alert("❌ No se pudo publicar el comentario.");
-        return;
-    }
+    if (updateError) return;
 
     commentInput.value = ""; // limpiar input
-    displayComments(blogId); // recargar comentarios
+    displayComments(blogId); // mostrar los comentarios actualizados
 }
+
 
         
         function goToSettings() { window.location.href = 'ajustes.html'; }
