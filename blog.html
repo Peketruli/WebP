@@ -184,31 +184,54 @@
     }
 
     async function postComment(blogId) {
-      if (!isUserLoggedIn()) { document.getElementById("warningMessage").classList.remove("hidden"); return; }
-      document.getElementById("warningMessage").classList.add("hidden");
+  if (!isUserLoggedIn()) { 
+    document.getElementById("warningMessage").classList.remove("hidden"); 
+    return; 
+  }
+  document.getElementById("warningMessage").classList.add("hidden");
 
-      const commentText = document.getElementById(`commentInput${blogId}`).value.trim();
-      const user = getCurrentUser();
-      if (!commentText) return;
+  const commentText = document.getElementById(`commentInput${blogId}`).value.trim();
+  const user = getCurrentUser();
+  if (!commentText) return;
 
-      const { data, error } = await supabase.from("blogs").select("comments").eq("id", blogId).single();
-      if (error) return console.error(error);
+  // Obtener comentarios actuales
+  const { data, error } = await supabase
+    .from("blogs")
+    .select("comments")
+    .eq("id", blogId)
+    .single();
 
-      const comments = data.comments || [];
-      comments.push({ author: user.username || "Anónimo", text: commentText });
+  if (error) return console.error(error);
 
-      await supabase.from("blogs").update({ comments }).eq("id", blogId);
-      displayComments(blogId);
-    }
+  // Asegurarse de que comments sea siempre un array
+  let comments = Array.isArray(data.comments) ? data.comments : [];
+  comments.push({ author: user.username || "Anónimo", text: commentText });
 
-    async function displayComments(blogId) {
-      const { data, error } = await supabase.from("blogs").select("comments").eq("id", blogId).single();
-      if (error) return console.error(error);
+  const { error: updateError } = await supabase
+    .from("blogs")
+    .update({ comments })
+    .eq("id", blogId);
 
-      const commentsContainer = document.getElementById(`comments${blogId}`);
-      const comments = data.comments || [];
-      commentsContainer.innerHTML = comments.map(c => `<p><strong>${c.author}:</strong> ${c.text}</p>`).join("");
-    }
+  if (updateError) return console.error(updateError);
+
+  displayComments(blogId);
+}
+
+async function displayComments(blogId) {
+  const { data, error } = await supabase
+    .from("blogs")
+    .select("comments")
+    .eq("id", blogId)
+    .single();
+
+  if (error) return console.error(error);
+
+  const commentsContainer = document.getElementById(`comments${blogId}`);
+  const comments = Array.isArray(data.comments) ? data.comments : [];
+  commentsContainer.innerHTML = comments
+    .map(c => `<p><strong>${c.author}:</strong> ${c.text}</p>`)
+    .join("");
+}
 
     function goToSettings() { window.location.href = 'ajustes.html'; }
     function logout() { localStorage.removeItem("currentUser"); window.location.href = 'login.html'; }
