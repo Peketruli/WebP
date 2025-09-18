@@ -109,7 +109,11 @@
       userInfo.style.display = "none";
       authContainer.style.display = "flex";
     }
-  }
+  document.addEventListener("DOMContentLoaded", () => {
+    loadUserInfo(); // <-- Aquí cargamos la info del usuario
+    loadBlogs();    // <-- Luego cargamos los blogs
+});
+
 
   function goToSettings() { window.location.href = 'ajustes.html'; }
   function logout() { localStorage.removeItem("currentUser"); window.location.href = 'login.html'; }
