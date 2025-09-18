@@ -33,17 +33,21 @@
   display: none;
 }
 
+/* Reemplaza las dos declaraciones .blog-details que tienes por esta */
 .blog-details {
-  opacity: 0;
-  transform: translateY(-20px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
-  pointer-events: none; /* evita clicks cuando está oculto */
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.45s ease, padding 0.45s ease;
+  padding: 0 20px; /* padding inicial (alto 0 para poder animar hacia padding:20px) */
+  background: white;
+  margin-top: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
 .blog-details.show {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
+  max-height: 1000px; /* suficiente para la mayoría de contenidos (ajusta si hace falta) */
+  padding: 20px; /* padding final */
 }
 
     .blog-form { margin-top: 20px; }
@@ -200,21 +204,39 @@
       </div>
   `;
 
-  // mostrar con animación
+  // 1) Hacemos visible el contenedor (quitamos display:none)
+  detailsContainer.classList.remove("hidden");
+
+  // 2) Forzamos reflow para que el navegador aplique el estado "max-height: 0" antes de añadir .show
+  //    Esto asegura que la transición se dispare.
+  void detailsContainer.offsetHeight; // <<-- aquí está el truco
+
+  // 3) Añadimos la clase que expande (animación)
   detailsContainer.classList.add("show");
 
-  // scroll suave hasta el blog abierto
-  setTimeout(() => {
-    detailsContainer.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, 50);
+  // Opcional: ocultar la lista de blogs si quieres que se muestre solo el detalle
+  // document.getElementById("blogsList").classList.add("hidden");
+
+  // Desplazamos suavemente hasta el detalle (un pelín después para que empiece la animación)
+  setTimeout(() => detailsContainer.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
 
   displayComments(blog.id);
 }
 
 function closeBlog() {
   const detailsContainer = document.getElementById("blogDetails");
+
+  // Quitamos la clase .show para que haga la transición de cierre
   detailsContainer.classList.remove("show");
+
+  // Esperamos la duración de la transición antes de volver a aplicar display:none
+  setTimeout(() => {
+    detailsContainer.classList.add("hidden");
+    // Volver a mostrar la lista de blogs si la ocultaste
+    // document.getElementById("blogsList").classList.remove("hidden");
+  }, 500); // coincide con la duración de transición (0.45s -> 450ms), he puesto 500ms por seguridad
 }
+
 
     async function postComment(blogId) {
   if (!isUserLoggedIn()) { 
