@@ -1,513 +1,169 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Blog - Rebeldía IN.AR</title>
-
+  <meta charset="UTF-8">
+  <title>Blog</title>
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
   <style>
-    /* Fondo que te gusta */
     body {
       margin: 0;
-      min-height: 100vh;
-      background: linear-gradient(45deg, #FF5733, #FF8D1A, #FFC300, #FF5733);
-      background-size: 400% 400%;
-      animation: gradientBG 10s ease infinite;
-      font-family: Arial, sans-serif;
-      color: black;
-      padding: 40px 20px;
-      box-sizing: border-box;
-    }
-    @keyframes gradientBG {
-      0% { background-position: 0% 50%;}
-      50% { background-position: 100% 50%;}
-      100% { background-position: 0% 50%;}
-    }
-
-    /* auth (igual que tu página principal) */
-    .auth-container, .user-info {
-      position: absolute;
-      top: 20px;
-      right: 20px;
+      height: 100vh;
       display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .auth-button {
-      padding: 10px 14px;
+      justify-content: center;
+      align-items: flex-start;
+      background: linear-gradient(135deg, #111, #222);
       color: white;
-      background: #333;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
+      font-family: Arial, sans-serif;
+      padding: 20px;
     }
-    .user-info { display: none; cursor: pointer; color: white; }
-    #userLogo { width: 40px; height: 40px; border-radius: 50%; }
-    #userName { font-weight: bold; }
-
-    .dropdown-menu {
-      display: none;
-      position: absolute;
-      top: 60px;
-      right: 20px;
-      background: white;
-      color: black;
-      border-radius: 6px;
-      box-shadow: 0 4px 8px rgba(0,0,0,.2);
-      width: 160px;
-      text-align: left;
+    .container {
+      width: 100%;
+      max-width: 800px;
     }
-    .dropdown-menu td { padding: 10px; cursor: pointer; }
-    .dropdown-menu td:hover { background: #eee; }
-
-    /* contenedor */
-    .container { max-width: 900px; margin: 80px auto 40px; }
-
-    header { display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:18px; }
-    header h1 { margin:0; color: #fff; font-size: 26px; }
-
-    .controls { display:flex; gap:10px; align-items:center; }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
     .btn {
-      padding: 10px 14px;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
+      margin: 10px 0;
+      padding: 10px 15px;
       background: #e11d48;
       color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
     }
-
-    /* lista de blogs */
-    .blog-list { display:block; gap:16px; }
-    .blog-post {
-      background: white; /* CAJA BLANCA */
+    .btn:hover {
+      background: #be123c;
+    }
+    .blog-list, .blog-details, .new-blog {
+      background: white;
       color: black;
-      padding: 18px;
+      padding: 20px;
       border-radius: 10px;
-      margin-bottom: 14px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+      margin-bottom: 20px;
+    }
+    .blog-post {
+      border-bottom: 1px solid #ccc;
+      padding: 10px 0;
       cursor: pointer;
     }
-    .blog-post h3 { margin:0 0 8px 0; }
-    .blog-post p { margin:0; color: #222; }
-
-    /* detalles - slide */
-    #blogDetails {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.45s ease, padding 0.45s ease;
-      padding: 0 18px;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
-      margin-top: 16px;
+    .blog-post:last-child {
+      border-bottom: none;
     }
-    #blogDetails.show {
-      max-height: 1200px;
-      padding: 18px;
-    }
-    #blogDetails.hidden { display: none; } /* lo usamos solo para ocultarlo por completo */
-
-    /* formulario nuevo post */
-    #newPostForm {
+    .hidden {
       display: none;
-      background: white;
-      padding: 16px;
-      border-radius: 10px;
-      margin-bottom: 16px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
     }
-    #newPostForm input, #newPostForm textarea {
+    input, textarea {
       width: 100%;
       padding: 10px;
       margin: 8px 0;
-      box-sizing: border-box;
+      border: 1px solid #ccc;
       border-radius: 6px;
-      border: 1px solid #ddd;
     }
-
-    .meta { font-size: 13px; color: #555; margin-top: 8px; }
-    .comment { background:#f6f6f6; padding:8px; border-radius:6px; margin-bottom:6px; }
   </style>
 </head>
 <body>
-  <!-- auth UI -->
-  <div class="auth-container" id="authContainer">
-    <button class="auth-button" onclick="window.location.href='login.html'">Iniciar sesión o registrarse</button>
-  </div>
-  <div class="user-info" id="userInfo">
-    <span id="userName"></span>
-    <img id="userLogo" src="logoDefault.png" alt="logo usuario">
-  </div>
-  <div class="dropdown-menu" id="dropdownMenu">
-    <table>
-      <tr><td onclick="goToSettings()">⚙ Ajustes</td></tr>
-      <tr><td onclick="logout()">🚪 Cerrar sesión</td></tr>
-    </table>
-  </div>
-
   <div class="container">
-    <header>
-      <h1>Blog - Rebeldía IN.AR</h1>
-      <div class="controls">
-        <button class="btn" onclick="window.location.href='PaginaPrincipal.html'">🏠 Volver a la Página Principal</button>
-        <button id="publishBtn" class="btn" style="display:none" onclick="togglePostForm()">✍ Publicar</button>
-      </div>
-    </header>
+    <h1>Blog</h1>
 
-    <!-- form nuevo post -->
-    <div id="newPostForm">
-      <h3>Crear nuevo blog</h3>
-      <input id="postTitle" placeholder="Título" />
-      <textarea id="postContent" rows="5" placeholder="Contenido..."></textarea>
-      <input type="file" id="postMedia" accept="image/*,video/*" />
-      <div style="display:flex;gap:8px;margin-top:8px;">
-        <button class="btn" onclick="publishPost()">Publicar</button>
-        <button class="btn" style="background:#777" onclick="togglePostForm()">Cancelar</button>
-      </div>
+    <!-- Botón publicar -->
+    <button class="btn" onclick="showNewBlogForm()">➕ Publicar nuevo blog</button>
+
+    <!-- Formulario nuevo blog -->
+    <div id="newBlogForm" class="new-blog hidden">
+      <h2>Nuevo Blog</h2>
+      <input type="text" id="newTitle" placeholder="Título">
+      <textarea id="newContent" rows="5" placeholder="Escribe tu blog aquí..."></textarea>
+      <button class="btn" onclick="publishBlog()">Publicar</button>
+      <button class="btn" onclick="hideNewBlogForm()">Cancelar</button>
     </div>
 
-    <!-- lista de posts -->
-    <div id="blogList" class="blog-list"></div>
+    <!-- Lista de blogs -->
+    <div id="blogsList" class="blog-list"></div>
 
-    <!-- detalle -->
-    <div id="blogDetails" class="hidden"></div>
+    <!-- Detalles de blog -->
+    <div id="blogDetails" class="blog-details hidden">
+      <h2 id="blogTitle"></h2>
+      <p id="blogContent"></p>
+      <button class="btn" onclick="closeBlog()">Volver</button>
+    </div>
   </div>
 
-  <!-- supabase + script -->
-  <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+  <script>
+    // 🔹 Configura Supabase
+    const { createClient } = supabase;
+    const supabaseUrl = "https://jdvwlfogkzrzovepzjqa.supabase.co";
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkdndsZm9na3pyem92ZXB6anFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzY1MjEsImV4cCI6MjA3MzYxMjUyMX0.IwVFrvuluY0tfgE82XnqYSsRjFPsDYnlfyirHjKu1TI";
+    const db = createClient(supabaseUrl, supabaseKey);
 
-    // ---- REEMPLAZA ESTAS VARIABLES SI NECESITAS (o deja las tuyas) ----
-    const SUPABASE_URL = "https://jdvwlfogkzrzovepzjqa.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkdndsZm9na3pyem92ZXB6anFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzY1MjEsImV4cCI6MjA3MzYxMjUyMX0.IwVFrvuluY0tfgE82XnqYSsRjFPsDYnlfyirHjKu1TI";
-    // -------------------------------------------------------------------
-
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-    window.supabase = supabase; // útil para debug desde consola
-
-    /* --- helpers para usuario (siguen tu sistema actual que usa localStorage.currentUser) --- */
-    function getCurrentUser() { return JSON.parse(localStorage.getItem("currentUser")) || null; }
-    function isUserLoggedIn() { return !!getCurrentUser(); }
-
-    function goToSettings() { window.location.href = 'ajustes.html'; }
-    function logout() { localStorage.removeItem("currentUser"); window.location.href = 'login.html'; }
-
-    function loadUserInfo() {
-      const user = getCurrentUser();
-      const authContainer = document.getElementById("authContainer");
-      const userInfo = document.getElementById("userInfo");
-      const publishBtn = document.getElementById("publishBtn");
-
-      if (user) {
-        userInfo.style.display = "flex";
-        authContainer.style.display = "none";
-        document.getElementById("userName").textContent = user.username || "Usuario";
-        document.getElementById("userLogo").src = user.logo || "logoDefault.png";
-        publishBtn.style.display = "inline-block";
-      } else {
-        userInfo.style.display = "none";
-        authContainer.style.display = "flex";
-        publishBtn.style.display = "none";
-      }
-    }
-
-    // dropdown
-    document.addEventListener("DOMContentLoaded", () => {
-      loadUserInfo();
-      loadBlogs();
-
-      const userInfo = document.getElementById("userInfo");
-      const dropdownMenu = document.getElementById("dropdownMenu");
-      userInfo.addEventListener("click", () => {
-        dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
-      });
-      document.addEventListener("click", (e) => {
-        if (!userInfo.contains(e.target) && !dropdownMenu.contains(e.target)) dropdownMenu.style.display = "none";
-      });
-    });
-
-    /* --- normalizador de filas para adaptarnos a distintos esquemas --- */
-    function normalizeRow(row) {
-      const tryParse = (r) => {
-        if (!r) return [];
-        if (Array.isArray(r)) return r;
-        try { return JSON.parse(r); } catch(e){ return []; }
-      };
-
-      return {
-        id: row.id ?? row.ID ?? row.pk ?? row.id_blog ?? null,
-        title: row.title ?? row.titulo ?? row.name ?? "Sin título",
-        content: row.content ?? row.contenido ?? row.body ?? row.descripcion ?? "",
-        author: row.author ?? row.autor ?? row.user ?? "Anónimo",
-        media: row.media ?? row.media_url ?? row.imagen ?? row.url ?? null,
-        comments: tryParse(row.comments ?? row.comentarios ?? row.comentarios_json ?? []),
-        created_at: row.created_at ?? row.createdAt ?? row.fecha ?? null,
-        raw: row // guardamos por si hay que hacer updates con nombres originales
-      };
-    }
-
-    /* --- cargar posts desde supabase --- */
     async function loadBlogs() {
-      const container = document.getElementById("blogList");
-      container.innerHTML = "<p style='color:white'>Cargando...</p>";
-      try {
-        const { data, error } = await supabase
-          .from("blog")
-          .select("*")
-          .order("created_at", { ascending: false });
-
-        if (error) {
-          console.error("Error leyendo supabase:", error);
-          container.innerHTML = "<p style='color:white'>Error cargando blogs (revisa consola).</p>";
-          return;
-        }
-        const rows = (data || []);
-        const blogs = rows.map(normalizeRow);
-        window.cachedBlogs = blogs;
-
-        // Render
-        container.innerHTML = "";
-        if (blogs.length === 0) {
-          container.innerHTML = "<p style='color:white'>No hay blogs todavía.</p>";
-          return;
-        }
-        blogs.forEach(b => {
-          const card = document.createElement("div");
-          card.className = "blog-post";
-          const title = document.createElement("h3"); title.textContent = b.title;
-          const p = document.createElement("p"); p.textContent = b.content.length > 200 ? b.content.slice(0,200) + "..." : b.content;
-          const meta = document.createElement("div"); meta.className = "meta"; meta.textContent = `Autor: ${b.author}${b.created_at ? " • " + new Date(b.created_at).toLocaleString() : ""}`;
-          card.appendChild(title);
-          card.appendChild(p);
-          card.appendChild(meta);
-          card.addEventListener("click", () => openBlog(b.id));
-          container.appendChild(card);
-        });
-      } catch (err) {
-        console.error(err);
-        container.innerHTML = "<p style='color:white'>Error inesperado.</p>";
+      const { data, error } = await db.from("blog").select("*").order("created_at", { ascending: false });
+      if (error) {
+        console.error("Error cargando blogs:", error);
+        return;
       }
+      const blogsList = document.getElementById("blogsList");
+      blogsList.innerHTML = "";
+      data.forEach(blog => {
+        const div = document.createElement("div");
+        div.className = "blog-post";
+        div.innerHTML = `<h3>${blog.title}</h3><p>${blog.content.substring(0, 100)}...</p>`;
+        div.onclick = () => openBlog(blog);
+        blogsList.appendChild(div);
+      });
     }
 
-    /* --- abrir detalle con slide-down --- */
-    function openBlog(id) {
-      const blogId = id;
-      const blog = (window.cachedBlogs || []).find(x => String(x.id) === String(blogId));
-      if (!blog) { alert("Blog no encontrado"); return; }
-
-      const details = document.getElementById("blogDetails");
-      details.classList.remove("hidden");
-      details.innerHTML = ""; // limpiamos
-
-      const title = document.createElement("h2"); title.textContent = blog.title;
-      const by = document.createElement("p"); by.className = "meta"; by.textContent = `Autor: ${blog.author}`;
-      details.appendChild(title);
-      details.appendChild(by);
-
-      if (blog.media) {
-        const mediaEl = document.createElement("img");
-        mediaEl.src = blog.media;
-        mediaEl.style.maxWidth = "100%";
-        mediaEl.style.display = "block";
-        mediaEl.style.margin = "10px 0";
-        details.appendChild(mediaEl);
-      }
-
-      const content = document.createElement("p"); content.textContent = blog.content;
-      details.appendChild(content);
-
-      // comentarios
-      const commentsWrap = document.createElement("div");
-      commentsWrap.style.marginTop = "12px";
-      const hComments = document.createElement("h4"); hComments.textContent = "Comentarios";
-      commentsWrap.appendChild(hComments);
-
-      const commentsContainer = document.createElement("div");
-      commentsContainer.id = `comments-${blog.id}`;
-      if (!Array.isArray(blog.comments) || blog.comments.length === 0) {
-        commentsContainer.innerHTML = "<p class='meta'>No hay comentarios todavía.</p>";
-      } else {
-        commentsContainer.innerHTML = "";
-        blog.comments.forEach(c => {
-          const cm = document.createElement("div"); cm.className = "comment";
-          cm.innerHTML = `<strong>${c.author || "Anónimo"}:</strong> <div>${c.text}</div>`;
-          commentsContainer.appendChild(cm);
-        });
-      }
-      commentsWrap.appendChild(commentsContainer);
-
-      // caja para comentar (si está logueado)
-      if (isUserLoggedIn()) {
-        const input = document.createElement("input");
-        input.id = `commentInput-${blog.id}`;
-        input.placeholder = "Escribe un comentario...";
-        input.style.width = "100%";
-        input.style.padding = "8px";
-        input.style.marginTop = "8px";
-
-        const sendBtn = document.createElement("button");
-        sendBtn.className = "btn";
-        sendBtn.textContent = "Comentar";
-        sendBtn.style.marginTop = "8px";
-        sendBtn.addEventListener("click", () => postComment(blog.id));
-
-        commentsWrap.appendChild(input);
-        commentsWrap.appendChild(sendBtn);
-      } else {
-        const loginNotice = document.createElement("p");
-        loginNotice.className = "meta";
-        loginNotice.textContent = "Debes iniciar sesión para publicar comentarios.";
-        commentsWrap.appendChild(loginNotice);
-      }
-
-      details.appendChild(commentsWrap);
-
-      // boton cerrar
-      const closeBtn = document.createElement("div");
-      closeBtn.style.marginTop = "12px";
-      const b = document.createElement("button");
-      b.className = "btn";
-      b.style.background = "#777";
-      b.textContent = "Cerrar";
-      b.addEventListener("click", closeBlog);
-      closeBtn.appendChild(b);
-      details.appendChild(closeBtn);
-
-      // forzamos reflow y abrimos con la clase .show
-      void details.offsetHeight; // force reflow
-      details.classList.add("show");
-      setTimeout(() => details.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
+    function openBlog(blog) {
+      document.getElementById("blogTitle").textContent = blog.title;
+      document.getElementById("blogContent").textContent = blog.content;
+      document.getElementById("blogsList").classList.add("hidden");
+      document.getElementById("blogDetails").classList.remove("hidden");
     }
 
     function closeBlog() {
-      const details = document.getElementById("blogDetails");
-      details.classList.remove("show");
-      setTimeout(() => {
-        details.classList.add("hidden");
-        details.innerHTML = "";
-      }, 480);
+      document.getElementById("blogDetails").classList.add("hidden");
+      document.getElementById("blogsList").classList.remove("hidden");
     }
 
-    /* --- Toggle formulario publicar --- */
-    function togglePostForm() {
-      const f = document.getElementById("newPostForm");
-      f.style.display = (f.style.display === "block") ? "none" : "block";
+    function showNewBlogForm() {
+      document.getElementById("newBlogForm").classList.remove("hidden");
     }
 
-    /* --- upload media helper --- */
-    async function uploadMediaIfAny(file) {
-      if (!file) return null;
-      const fileName = `${Date.now()}_${file.name.replaceAll(/\s+/g, "_")}`;
-      const { error: uploadError } = await supabase.storage.from('blog-media').upload(fileName, file);
-      if (uploadError) {
-        console.error("Error subiendo media:", uploadError);
-        alert("Error al subir el archivo. Revisa consola.");
-        return null;
+    function hideNewBlogForm() {
+      document.getElementById("newBlogForm").classList.add("hidden");
+    }
+
+    async function publishBlog() {
+      const title = document.getElementById("newTitle").value;
+      const content = document.getElementById("newContent").value;
+
+      if (!title || !content) {
+        alert("Completa todos los campos");
+        return;
       }
-      // obtener URL pública (compatibilidad con distintas versiones)
-      const urlRes = await supabase.storage.from('blog-media').getPublicUrl(fileName);
-      const mediaUrl = (urlRes && (urlRes.publicURL || (urlRes.data && (urlRes.data.publicUrl || urlRes.data.publicUrl)))) || null;
-      return mediaUrl;
-    }
 
-    /* --- publicar post (intenta con varios nombres de columna por compatibilidad) --- */
-    async function publishPost() {
-      const title = document.getElementById("postTitle").value.trim();
-      const content = document.getElementById("postContent").value.trim();
-      const fileInput = document.getElementById("postMedia");
-      const file = fileInput.files && fileInput.files[0];
-      const user = getCurrentUser();
+      // Aquí sacamos el usuario actual del localStorage
+      const user = JSON.parse(localStorage.getItem("currentUser")) || { username: "Anónimo" };
 
-      if (!user) { alert("Debes iniciar sesión para publicar."); return; }
-      if (!title || !content) { alert("Rellena título y contenido."); return; }
+      const { error } = await db.from("blog").insert([
+        { title, content, author: user.username }
+      ]);
 
-      let mediaUrl = null;
-      if (file) mediaUrl = await uploadMediaIfAny(file);
-
-      // intentamos insertar con nombres en inglés, si falla intentamos con español
-      const dataEn = {
-        title, content, author: user.username || "Anónimo", media: mediaUrl, comments: []
-      };
-      try {
-        let { error } = await supabase.from('blog').insert([dataEn]);
-        if (error) {
-          console.warn("Insert English failed, trying Spanish...", error);
-          // try Spanish fields
-          const dataEs = { titulo: title, contenido: content, autor: user.username || "Anónimo", media: mediaUrl };
-          const { error: errorEs } = await supabase.from('blog').insert([dataEs]);
-          if (errorEs) {
-            console.error("Ambos inserts fallaron:", error, errorEs);
-            alert("Error publicando (revisa consola).");
-            return;
-          }
-        }
-        // éxito
-        alert("Publicado con éxito.");
-        document.getElementById("postTitle").value = "";
-        document.getElementById("postContent").value = "";
-        document.getElementById("postMedia").value = "";
-        document.getElementById("newPostForm").style.display = "none";
-        loadBlogs();
-      } catch (err) {
-        console.error(err);
-        alert("Error inesperado publicando.");
+      if (error) {
+        console.error("Error publicando:", error);
+        alert("Hubo un error al publicar");
+        return;
       }
+
+      alert("Blog publicado con éxito");
+      hideNewBlogForm();
+      loadBlogs();
     }
 
-    /* --- comentar (intenta columnas diferentes) --- */
-    async function postComment(blogId) {
-      const input = document.getElementById(`commentInput-${blogId}`);
-      if (!input) return;
-      const text = input.value.trim();
-      const user = getCurrentUser();
-      if (!user) { alert("Debes iniciar sesión para comentar."); return; }
-      if (!text) return;
-
-      try {
-        // obtener fila completa
-        const { data: rowData, error: fetchErr } = await supabase.from('blog').select('*').eq('id', blogId).single();
-        if (fetchErr) {
-          console.warn("Fetch row failed (id?), trying alternative selectors...", fetchErr);
-          // si la columna id no existe, intentar buscar por otro campo:
-        }
-        const row = rowData || {};
-        // detectamos nombre original de comments para hacer update
-        const currentComments = Array.isArray(row.comments) ? row.comments
-                              : Array.isArray(row.comentarios) ? row.comentarios
-                              : (row.comments ? (() => { try { return JSON.parse(row.comments); } catch { return []; } })() : []);
-        const newComments = currentComments.slice();
-        newComments.push({ author: user.username || "Anónimo", text, created_at: new Date().toISOString() });
-
-        // intentamos actualizar 'comments'
-        let { error: updateErr } = await supabase.from('blog').update({ comments: newComments }).eq('id', blogId);
-        if (updateErr) {
-          // intentar actualizar 'comentarios'
-          const { error: updateErr2 } = await supabase.from('blog').update({ comentarios: newComments }).eq('id', blogId);
-          if (updateErr2) {
-            console.error("No se pudo actualizar comentarios:", updateErr, updateErr2);
-            alert("Error al guardar comentario (revisa consola).");
-            return;
-          }
-        }
-
-        // recargar lista y detalle
-        await loadBlogs();
-        // actualizar la vista de comentarios sin recargar todo
-        const commentsContainer = document.getElementById(`comments-${blogId}`);
-        if (commentsContainer) {
-          const cm = document.createElement("div"); cm.className = "comment";
-          cm.innerHTML = `<strong>${user.username}:</strong> <div>${text}</div>`;
-          // si tenía "No hay comentarios..." lo reemplazamos
-          if (commentsContainer.querySelector('.meta')) commentsContainer.innerHTML = "";
-          commentsContainer.appendChild(cm);
-        }
-
-        input.value = "";
-      } catch (err) {
-        console.error(err);
-        alert("Error inesperado al comentar.");
-      }
-    }
+    // 🔹 Cargar blogs al inicio
+    loadBlogs();
   </script>
 </body>
 </html>
