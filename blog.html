@@ -233,12 +233,12 @@ async function publishComment() {
     return; 
   }
 
-  // DEBUG: mostrar los datos que vamos a insertar
-  console.log("Intentando insertar comentario:", {
-    blog_id: window.currentBlogId,
-    author: user.username,
-    comment: commentText
-  });
+  // DEBUG visible sin consola
+alert("Intentando insertar comentario:\n" +
+  "blog_id: " + window.currentBlogId + "\n" +
+  "author: " + user.username + "\n" +
+  "comment: " + commentText
+);
 
   const { data, error } = await db.from("comments").insert([{
     blog_id: window.currentBlogId,
