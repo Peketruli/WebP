@@ -2,19 +2,16 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Blog - Rebeldía IN.AR</title>
   <style>
     body {
-      margin: 0;
-      min-height: 100vh;
       background: linear-gradient(45deg, #FF5733, #FF8D1A, #FFC300, #FF5733);
       background-size: 400% 400%;
       animation: gradientBG 10s ease infinite;
-      color: white;
       font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 50px;
+      color: black;
+      margin: 0;
+      padding: 0;
     }
 
     @keyframes gradientBG {
@@ -23,219 +20,152 @@
       100% { background-position: 0% 50%; }
     }
 
-    /* auth */
-    .auth-container, .user-info {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+    header {
+      padding: 20px;
+      text-align: center;
+      color: white;
     }
 
-    .auth-button {
-      padding: 10px 20px;
-      font-size: 1em;
+    .container {
+      max-width: 800px;
+      margin: 30px auto;
+      padding: 20px;
+    }
+
+    .blog-post {
+      background: white;
+      color: black;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .blog-post h3 {
+      margin-top: 0;
+    }
+
+    .button {
+      display: inline-block;
+      padding: 10px 15px;
+      margin: 10px 0;
+      background-color: #007BFF;
       color: white;
-      background-color: #333;
       border: none;
-      cursor: pointer;
       border-radius: 5px;
+      cursor: pointer;
       text-decoration: none;
     }
 
-    .user-info {
+    .button:hover {
+      background-color: #0056b3;
+    }
+
+    #newPostForm {
       display: none;
-      cursor: pointer;
-    }
-
-    #userLogo {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-    }
-
-    #userName {
-      font-size: 1em;
-      font-weight: bold;
-    }
-
-    /* Menú desplegable */
-    .dropdown-menu {
-      display: none;
-      position: absolute;
-      top: 60px;
-      right: 20px;
-      background-color: white;
-      color: black;
-      border-radius: 5px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-      width: 150px;
-      text-align: left;
-    }
-
-    .dropdown-menu td {
-      padding: 10px;
-      cursor: pointer;
-    }
-
-    .dropdown-menu td:hover {
-      background-color: #ddd;
-    }
-
-    /* contenedor blog */
-    .container {
-      width: 90%;
-      max-width: 800px;
-      margin: auto;
-      margin-top: 100px;
-    }
-
-    .btn {
-      display: inline-block;
-      margin: 10px 0;
-      padding: 10px 15px;
-      background: #e11d48;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 15px;
-      transition: background 0.3s;
-    }
-
-    .btn:hover {
-      background: #be123c;
-    }
-
-    .blog-list, .blog-details {
-      background: rgba(255,255,255,0.1);
+      margin-bottom: 20px;
+      background: white;
       padding: 20px;
       border-radius: 10px;
     }
 
-    .blog-post {
-      border-bottom: 1px solid rgba(255,255,255,0.3);
-      padding: 10px 0;
-      cursor: pointer;
-    }
-
-    .blog-post:last-child {
-      border-bottom: none;
-    }
-
-    .hidden {
-      display: none;
+    #newPostForm input, #newPostForm textarea {
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
     }
   </style>
 </head>
 <body>
-  <!-- auth -->
-  <div class="auth-container" id="authContainer">
-    <button class="auth-button" onclick="window.location.href='login.html'">Iniciar sesión o registrarse</button>
-  </div>
+  <header>
+    <h1>Blog Rebeldía IN.AR</h1>
+    <button class="button" onclick="window.location.href='index.html'">⬅ Volver a la página principal</button>
+    <button id="publishBtn" class="button" style="display:none;" onclick="togglePostForm()">✍ Publicar blog</button>
+  </header>
 
-  <div class="user-info" id="userInfo">
-    <h3 id="userName"></h3>
-    <img id="userLogo" src="logoDefault.png" alt="Logo del usuario">
-  </div>
-
-  <div class="dropdown-menu" id="dropdownMenu">
-    <table>
-      <tr><td onclick="goToSettings()">⚙ Ajustes</td></tr>
-      <tr><td onclick="logout()">🚪 Cerrar sesión</td></tr>
-    </table>
-  </div>
-
-  <!-- contenido blog -->
   <div class="container">
-    <h1>Blog</h1>
-    <button class="btn" onclick="window.location.href='PaginaPrincipal.html'">🏠 Volver a la Página Principal</button>
-
-    <!-- Lista de blogs -->
-    <div id="blogsList" class="blog-list">
-      <div class="blog-post" onclick="openBlog(1)">
-        <h3>Título del Blog 1</h3>
-        <p>Resumen breve del blog...</p>
-      </div>
-      <div class="blog-post" onclick="openBlog(2)">
-        <h3>Título del Blog 2</h3>
-        <p>Otro resumen breve...</p>
-      </div>
+    <!-- Formulario para nuevo post -->
+    <div id="newPostForm">
+      <h3>Escribe un nuevo blog</h3>
+      <input type="text" id="title" placeholder="Título del blog">
+      <textarea id="content" rows="5" placeholder="Contenido del blog"></textarea>
+      <button class="button" onclick="publishPost()">Publicar</button>
     </div>
 
-    <!-- Detalle de blog -->
-    <div id="blogDetails" class="blog-details hidden">
-      <h2 id="blogTitle"></h2>
-      <p id="blogContent"></p>
-      <button class="btn" onclick="closeBlog()">Volver</button>
-    </div>
+    <!-- Contenedor de blogs -->
+    <div id="blogContainer"></div>
   </div>
 
   <script>
-    // Sistema de usuario como en la página principal
-    function goToSettings() {
-      window.location.href = 'ajustes.html';
-    }
-
-    function logout() {
-      localStorage.removeItem("currentUser");
-      window.location.href = 'login.html';
-    }
-
-    function loadUserInfo() {
+    document.addEventListener("DOMContentLoaded", () => {
       const user = JSON.parse(localStorage.getItem("currentUser"));
-      const authContainer = document.getElementById("authContainer");
-      const userInfo = document.getElementById("userInfo");
-
       if (user) {
-        userInfo.style.display = "flex";
-        authContainer.style.display = "none";
-        document.getElementById("userName").textContent = user.username || "Usuario";
-        document.getElementById("userLogo").src = user.logo || "logoDefault.png";
-      } else {
-        userInfo.style.display = "none";
-        authContainer.style.display = "flex";
+        document.getElementById("publishBtn").style.display = "inline-block";
+      }
+      loadBlogs();
+    });
+
+    function togglePostForm() {
+      const form = document.getElementById("newPostForm");
+      form.style.display = (form.style.display === "block") ? "none" : "block";
+    }
+
+    async function loadBlogs() {
+      try {
+        let response = await fetch("backend_blog.php?action=get");
+        let blogs = await response.json();
+
+        const container = document.getElementById("blogContainer");
+        container.innerHTML = "";
+
+        blogs.forEach(blog => {
+          const div = document.createElement("div");
+          div.classList.add("blog-post");
+          div.innerHTML = `
+            <h3>${blog.titulo}</h3>
+            <p>${blog.contenido}</p>
+            <small>Autor: ${blog.autor}</small>
+          `;
+          container.appendChild(div);
+        });
+      } catch (error) {
+        console.error("Error cargando blogs:", error);
       }
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
-      loadUserInfo();
+    async function publishPost() {
+      const title = document.getElementById("title").value;
+      const content = document.getElementById("content").value;
+      const user = JSON.parse(localStorage.getItem("currentUser"));
 
-      const userInfo = document.getElementById("userInfo");
-      const dropdownMenu = document.getElementById("dropdownMenu");
+      if (!title || !content) {
+        alert("Por favor rellena todos los campos.");
+        return;
+      }
 
-      userInfo.addEventListener("click", () => {
-        dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
-      });
+      try {
+        let response = await fetch("backend_blog.php?action=add", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            titulo: title,
+            contenido: content,
+            autor: user.username
+          })
+        });
 
-      document.addEventListener("click", (event) => {
-        if (!userInfo.contains(event.target) && !dropdownMenu.contains(event.target)) {
-          dropdownMenu.style.display = "none";
+        if (response.ok) {
+          alert("Blog publicado con éxito.");
+          document.getElementById("title").value = "";
+          document.getElementById("content").value = "";
+          togglePostForm();
+          loadBlogs();
+        } else {
+          alert("Error publicando el blog.");
         }
-      });
-    });
-
-    // Blog de prueba
-    const blogs = [
-      { id: 1, title: "Título del Blog 1", content: "Este es el contenido completo del primer blog." },
-      { id: 2, title: "Título del Blog 2", content: "Contenido completo del segundo blog." }
-    ];
-
-    function openBlog(id) {
-      const blog = blogs.find(b => b.id === id);
-      if (!blog) return;
-
-      document.getElementById("blogTitle").textContent = blog.title;
-      document.getElementById("blogContent").textContent = blog.content;
-
-      document.getElementById("blogsList").classList.add("hidden");
-      document.getElementById("blogDetails").classList.remove("hidden");
-    }
-
-    function closeBlog() {
-      document.getElementById("blogDetails").classList.add("hidden");
-      document.getElementById("blogsList").classList.remove("hidden");
+      } catch (error) {
+        console.error("Error:", error);
+      }
     }
   </script>
 </body>
