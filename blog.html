@@ -101,17 +101,20 @@
     const userInfo = document.getElementById("userInfo");
 
     if (user) {
-      userInfo.style.display = "flex";
-      authContainer.style.display = "none";
-      document.getElementById("userName").textContent = user.username || "Usuario";
-      document.getElementById("userLogo").src = user.logo || "logoDefault.png";
+        userInfo.style.display = "flex";
+        authContainer.style.display = "none";
+        document.getElementById("userName").textContent = user.username || "Usuario";
+        document.getElementById("userLogo").src = user.logo || "logoDefault.png";
     } else {
-      userInfo.style.display = "none";
-      authContainer.style.display = "flex";
+        userInfo.style.display = "none";
+        authContainer.style.display = "flex";
     }
-  document.addEventListener("DOMContentLoaded", () => {
-    loadUserInfo(); // <-- Aquí cargamos la info del usuario
-    loadBlogs();    // <-- Luego cargamos los blogs
+}
+
+// --- Aquí va fuera de la función ---
+document.addEventListener("DOMContentLoaded", () => {
+    loadUserInfo(); // Carga info del usuario
+    loadBlogs();    // Carga los blogs desde Supabase
 });
 
 
