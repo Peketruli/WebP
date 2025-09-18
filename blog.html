@@ -3,28 +3,92 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Blog</title>
+  <title>Blog - Rebeldía IN.AR</title>
   <style>
-    /* Fondo que te gustaba */
     body {
       margin: 0;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: linear-gradient(135deg, #111, #222);
+      min-height: 100vh;
+      background: linear-gradient(45deg, #FF5733, #FF8D1A, #FFC300, #FF5733);
+      background-size: 400% 400%;
+      animation: gradientBG 10s ease infinite;
       color: white;
       font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 50px;
     }
 
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* auth */
+    .auth-container, .user-info {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .auth-button {
+      padding: 10px 20px;
+      font-size: 1em;
+      color: white;
+      background-color: #333;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      text-decoration: none;
+    }
+
+    .user-info {
+      display: none;
+      cursor: pointer;
+    }
+
+    #userLogo {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+    }
+
+    #userName {
+      font-size: 1em;
+      font-weight: bold;
+    }
+
+    /* Menú desplegable */
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      top: 60px;
+      right: 20px;
+      background-color: white;
+      color: black;
+      border-radius: 5px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      width: 150px;
+      text-align: left;
+    }
+
+    .dropdown-menu td {
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    .dropdown-menu td:hover {
+      background-color: #ddd;
+    }
+
+    /* contenedor blog */
     .container {
       width: 90%;
       max-width: 800px;
-    }
-
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
+      margin: auto;
+      margin-top: 100px;
     }
 
     .btn {
@@ -45,13 +109,13 @@
     }
 
     .blog-list, .blog-details {
-      background: rgba(255,255,255,0.05);
+      background: rgba(255,255,255,0.1);
       padding: 20px;
       border-radius: 10px;
     }
 
     .blog-post {
-      border-bottom: 1px solid rgba(255,255,255,0.2);
+      border-bottom: 1px solid rgba(255,255,255,0.3);
       padding: 10px 0;
       cursor: pointer;
     }
@@ -66,8 +130,27 @@
   </style>
 </head>
 <body>
+  <!-- auth -->
+  <div class="auth-container" id="authContainer">
+    <button class="auth-button" onclick="window.location.href='login.html'">Iniciar sesión o registrarse</button>
+  </div>
+
+  <div class="user-info" id="userInfo">
+    <h3 id="userName"></h3>
+    <img id="userLogo" src="logoDefault.png" alt="Logo del usuario">
+  </div>
+
+  <div class="dropdown-menu" id="dropdownMenu">
+    <table>
+      <tr><td onclick="goToSettings()">⚙ Ajustes</td></tr>
+      <tr><td onclick="logout()">🚪 Cerrar sesión</td></tr>
+    </table>
+  </div>
+
+  <!-- contenido blog -->
   <div class="container">
     <h1>Blog</h1>
+    <button class="btn" onclick="window.location.href='PaginaPrincipal.html'">🏠 Volver a la Página Principal</button>
 
     <!-- Lista de blogs -->
     <div id="blogsList" class="blog-list">
@@ -90,7 +173,50 @@
   </div>
 
   <script>
-    // Datos de prueba (luego lo conectamos a tu sistema)
+    // Sistema de usuario como en la página principal
+    function goToSettings() {
+      window.location.href = 'ajustes.html';
+    }
+
+    function logout() {
+      localStorage.removeItem("currentUser");
+      window.location.href = 'login.html';
+    }
+
+    function loadUserInfo() {
+      const user = JSON.parse(localStorage.getItem("currentUser"));
+      const authContainer = document.getElementById("authContainer");
+      const userInfo = document.getElementById("userInfo");
+
+      if (user) {
+        userInfo.style.display = "flex";
+        authContainer.style.display = "none";
+        document.getElementById("userName").textContent = user.username || "Usuario";
+        document.getElementById("userLogo").src = user.logo || "logoDefault.png";
+      } else {
+        userInfo.style.display = "none";
+        authContainer.style.display = "flex";
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      loadUserInfo();
+
+      const userInfo = document.getElementById("userInfo");
+      const dropdownMenu = document.getElementById("dropdownMenu");
+
+      userInfo.addEventListener("click", () => {
+        dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
+      });
+
+      document.addEventListener("click", (event) => {
+        if (!userInfo.contains(event.target) && !dropdownMenu.contains(event.target)) {
+          dropdownMenu.style.display = "none";
+        }
+      });
+    });
+
+    // Blog de prueba
     const blogs = [
       { id: 1, title: "Título del Blog 1", content: "Este es el contenido completo del primer blog." },
       { id: 2, title: "Título del Blog 2", content: "Contenido completo del segundo blog." }
