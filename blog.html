@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mi Web</title>
+  <title>Blog</title>
   <style>
-    /* Mantengo el fondo que te gusta */
+    /* Fondo que te gustaba */
     body {
       margin: 0;
       height: 100vh;
@@ -18,23 +18,25 @@
     }
 
     .container {
-      text-align: center;
+      width: 90%;
+      max-width: 800px;
     }
 
     h1 {
-      margin-bottom: 30px;
+      text-align: center;
+      margin-bottom: 20px;
     }
 
     .btn {
       display: inline-block;
-      margin: 10px;
-      padding: 12px 20px;
+      margin: 10px 0;
+      padding: 10px 15px;
       background: #e11d48;
       color: white;
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      font-size: 16px;
+      font-size: 15px;
       transition: background 0.3s;
     }
 
@@ -42,57 +44,72 @@
       background: #be123c;
     }
 
-    /* Ocultar pantallas por defecto */
-    .screen {
+    .blog-list, .blog-details {
+      background: rgba(255,255,255,0.05);
+      padding: 20px;
+      border-radius: 10px;
+    }
+
+    .blog-post {
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+      padding: 10px 0;
+      cursor: pointer;
+    }
+
+    .blog-post:last-child {
+      border-bottom: none;
+    }
+
+    .hidden {
       display: none;
-    }
-
-    .screen.active {
-      display: block;
-    }
-
-    /* Botón volver */
-    .back-btn {
-      margin-top: 20px;
-      background: #444;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- Pantalla principal -->
-    <div id="main" class="screen active">
-      <h1>Bienvenido a Mi Web</h1>
-      <button class="btn" onclick="showScreen('login')">Iniciar Sesión</button>
-      <button class="btn" onclick="showScreen('register')">Registrarse</button>
+    <h1>Blog</h1>
+
+    <!-- Lista de blogs -->
+    <div id="blogsList" class="blog-list">
+      <div class="blog-post" onclick="openBlog(1)">
+        <h3>Título del Blog 1</h3>
+        <p>Resumen breve del blog...</p>
+      </div>
+      <div class="blog-post" onclick="openBlog(2)">
+        <h3>Título del Blog 2</h3>
+        <p>Otro resumen breve...</p>
+      </div>
     </div>
 
-    <!-- Pantalla de inicio de sesión -->
-    <div id="login" class="screen">
-      <h1>Iniciar Sesión</h1>
-      <input type="text" placeholder="Usuario"><br><br>
-      <input type="password" placeholder="Contraseña"><br><br>
-      <button class="btn">Entrar</button><br>
-      <button class="btn back-btn" onclick="showScreen('main')">Volver</button>
-    </div>
-
-    <!-- Pantalla de registro -->
-    <div id="register" class="screen">
-      <h1>Registrarse</h1>
-      <input type="text" placeholder="Usuario"><br><br>
-      <input type="email" placeholder="Correo"><br><br>
-      <input type="password" placeholder="Contraseña"><br><br>
-      <button class="btn">Crear Cuenta</button><br>
-      <button class="btn back-btn" onclick="showScreen('main')">Volver</button>
+    <!-- Detalle de blog -->
+    <div id="blogDetails" class="blog-details hidden">
+      <h2 id="blogTitle"></h2>
+      <p id="blogContent"></p>
+      <button class="btn" onclick="closeBlog()">Volver</button>
     </div>
   </div>
 
   <script>
-    function showScreen(screenId) {
-      document.querySelectorAll('.screen').forEach(screen => {
-        screen.classList.remove('active');
-      });
-      document.getElementById(screenId).classList.add('active');
+    // Datos de prueba (luego lo conectamos a tu sistema)
+    const blogs = [
+      { id: 1, title: "Título del Blog 1", content: "Este es el contenido completo del primer blog." },
+      { id: 2, title: "Título del Blog 2", content: "Contenido completo del segundo blog." }
+    ];
+
+    function openBlog(id) {
+      const blog = blogs.find(b => b.id === id);
+      if (!blog) return;
+
+      document.getElementById("blogTitle").textContent = blog.title;
+      document.getElementById("blogContent").textContent = blog.content;
+
+      document.getElementById("blogsList").classList.add("hidden");
+      document.getElementById("blogDetails").classList.remove("hidden");
+    }
+
+    function closeBlog() {
+      document.getElementById("blogDetails").classList.add("hidden");
+      document.getElementById("blogsList").classList.remove("hidden");
     }
   </script>
 </body>
