@@ -188,27 +188,33 @@
     }
 
     async function enviarMensaje() {
-        const input = document.getElementById("message-input");
-        const texto = input.value.trim();
-        if (!texto) return;
+    const input = document.getElementById("message-input");
+    const texto = input.value.trim();
+    if (!texto || !currentChatId) return;
 
-        await db.from("chat_messages").insert([{
-            chat_id: currentChatId,
-            author: usuario.username,
-            message: texto
-        }]);
+    const { error } = await db.from("chat_messages").insert([{
+        chat_id: currentChatId,
+        author: usuario.username,
+        message: texto
+    }]);
 
-        input.value = "";
-        await cargarMensajes();
-    }
+    if (error) return alert("Error al enviar mensaje: " + error.message);
 
+    input.value = "";
+    await cargarMensajes();
+}
     async function unirseAlChat() {
-        if (!currentChat) return;
+    if (!currentChat) return;
 
-        const nuevosMiembros = [...currentChat.miembros, usuario.username];
-        await db.from("chats").update({ miembros: nuevosMiembros }).eq("id", currentChatId);
-        abrirChat(currentChatId);
-    }
+    const nuevosMiembros = [...currentChat.miembros, usuario.username];
+    await db.from("chats").update({ miembros: nuevosMiembros }).eq("id", currentChatId);
+
+    // Recargar chat actualizado
+    const { data: updatedChat } = await db.from("chats").select("*").eq("id", currentChatId).single();
+    currentChat = updatedChat;
+
+    abrirChat(currentChatId);
+}
 
     async function expulsarMiembro(miembro) {
         if (miembro === currentChat.creador) return alert("No puedes expulsar al creador");
