@@ -199,8 +199,8 @@
     <button class="back-button" onclick="window.location.href='PaginaPrincipal.html'">Volver</button>
     
     <div class="left-container" id="leftContainer">
-        <h2>Lista de Clubs</h2>
-        <button class="create-club-button" onclick="crearClub()">Crear Club</button>
+        <h2>Lista de Chats</h2>
+        <button class="create-club-button" onclick="crearClub()">Crear Chat</button>
         
         <div class="clubs-container">
             <ul id="club-list"></ul>
@@ -209,7 +209,7 @@
 
     <div class="chat-section">
         <div class="chat-container" id="chatContainer">
-            <h2 id="club-title">Selecciona un club</h2>
+            <h2 id="club-title">Selecciona un chat</h2>
             <div class="messages" id="messages"></div>
             <div class="chat-input">
                 <input type="text" id="message-input" placeholder="Escribe un mensaje...">
@@ -229,23 +229,23 @@
     
     <div class="left-container" id="leftContainer" style="display:none;">
         <h2>Lista de Clubs</h2>
-        <button class="create-club-button" onclick="crearClub()">Crear Club</button>
+        <button class="create-club-button" onclick="crearClub()">Crear Chat</button>
         
         <div class="clubs-container">
-            <h2>Lista de Clubs</h2>
+            <h2>Lista de chats</h2>
             <ul id="club-list"></ul>
         </div>
     </div>
 
     <div class="chat-container" id="chatContainer" style="display:none;">
-        <h2 id="club-title">Selecciona un club</h2>
+        <h2 id="club-title">Selecciona un chat</h2>
         <div class="messages" id="messages"></div>
         <div class="chat-input">
             <form id="message-form">
                 <input type="text" id="message-input" placeholder="Escribe un mensaje...">
                 <button type="submit">Enviar</button>
             </form>
-            <button id="join-button" onclick="unirseAlClub()" style="display:none;">Unirse al club</button>
+            <button id="join-button" onclick="unirseAlClub()" style="display:none;">Unirse al chat</button>
         </div>
         <div class="members-list" id="members-list" style="display:none;">
             <h3>Miembros:</h3>
