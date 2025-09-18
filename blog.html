@@ -1,332 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
 <head>
-  <title>Blog - Rebeldía IN.AR</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Web</title>
   <style>
+    /* Mantengo el fondo que te gusta */
     body {
-      background: linear-gradient(45deg, #FF5733, #FF8D1A, #FFC300, #FF5733);
-      background-size: 400% 400%;
-      animation: gradientBG 10s ease infinite;
-      color: black;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #111, #222);
+      color: white;
       font-family: Arial, sans-serif;
+    }
+
+    .container {
       text-align: center;
-      padding: 50px;
-      position: relative;
-      margin-bottom: 100px;
     }
-    @keyframes gradientBG {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+
+    h1 {
+      margin-bottom: 30px;
     }
-    .blog-container {
-      max-width: 800px;
-      margin: auto;
-      background: white;
-      padding: 20px;
+
+    .btn {
+      display: inline-block;
+      margin: 10px;
+      padding: 12px 20px;
+      background: #e11d48;
+      color: white;
+      border: none;
       border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      text-align: center;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.3s;
     }
-    .blog-list { margin-top: 20px; }
-    .blog-post { border: 1px solid #ddd; padding: 10px; margin: 10px 0; cursor: pointer; background: #f9f9f9; border-radius: 5px; }
-.hidden {
-  display: none;
-}
 
-/* Reemplaza las dos declaraciones .blog-details que tienes por esta */
-.blog-details {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.45s ease, padding 0.45s ease;
-  padding: 0 20px; /* padding inicial (alto 0 para poder animar hacia padding:20px) */
-  background: white;
-  margin-top: 20px;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
-}
+    .btn:hover {
+      background: #be123c;
+    }
 
-.blog-details.show {
-  max-height: 1000px; /* suficiente para la mayoría de contenidos (ajusta si hace falta) */
-  padding: 20px; /* padding final */
-}
+    /* Ocultar pantallas por defecto */
+    .screen {
+      display: none;
+    }
 
-    .blog-form { margin-top: 20px; }
-    .blog-details { padding: 20px; background: white; margin-top: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-    .comment-section { margin-top: 20px; text-align: left; }
-    img { max-width: 300px; height: auto; display: block; margin: 10px auto; }
+    .screen.active {
+      display: block;
+    }
 
-    .auth-container, .user-info { position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 10px; }
-    .auth-button { padding: 10px 20px; font-size: 1em; color: white; background-color: #333; border: none; cursor: pointer; border-radius: 5px; }
-    .user-info { display: none; cursor: pointer; }
-    #userLogo { width: 40px; height: 40px; border-radius: 50%; }
-    #userName { font-weight: bold; }
-
-    .dropdown-menu { display: none; position: absolute; top: 60px; right: 20px; background: white; color: black; border-radius: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); width: 150px; text-align: left; }
-    .dropdown-menu td { padding: 10px; cursor: pointer; }
-    .dropdown-menu td:hover { background-color: #ddd; }
-    .warning-message { color: red; font-weight: bold; text-align: center; margin-top: 20px; }
+    /* Botón volver */
+    .back-btn {
+      margin-top: 20px;
+      background: #444;
+    }
   </style>
 </head>
 <body>
-  <button onclick="window.location.href='PaginaPrincipal.html'">🏠 Volver a la Página Principal</button>
-
-  <div class="auth-container" id="authContainer">
-    <button class="auth-button" onclick="window.location.href='login.html'">Iniciar sesión o registrarse</button>
-  </div>
-
-  <div class="user-info" id="userInfo">
-    <h3 id="userName"></h3>
-    <img id="userLogo" src="logoDefault.png" alt="Logo del usuario">
-  </div>
-
-  <div class="dropdown-menu" id="dropdownMenu">
-    <table>
-      <tr><td onclick="goToSettings()">⚙ Ajustes</td></tr>
-      <tr><td onclick="logout()">🚪 Cerrar sesión</td></tr>
-    </table>
-  </div>
-
-  <div class="blog-container">
-    <h2>Crear Blog</h2>
-    <button onclick="toggleBlogForm()">✏️ Crear Blog</button>
-    <div id="blogForm" class="blog-form hidden">
-      <input type="text" id="blogTitle" placeholder="Título del blog" style="width: 100%; padding: 8px;">
-      <textarea id="blogContent" placeholder="Escribe aquí..." style="width: 100%; height: 100px; padding: 8px;"></textarea>
-      <input type="file" id="blogMedia" accept="image/*,video/*">
-      <button onclick="publishBlog()">Publicar</button>
+  <div class="container">
+    <!-- Pantalla principal -->
+    <div id="main" class="screen active">
+      <h1>Bienvenido a Mi Web</h1>
+      <button class="btn" onclick="showScreen('login')">Iniciar Sesión</button>
+      <button class="btn" onclick="showScreen('register')">Registrarse</button>
     </div>
 
-    <h2>Blogs Publicados</h2>
-    <div id="blogsList" class="blog-list"></div>
-    <div id="blogDetails" class="blog-details hidden"></div>
-    <div id="warningMessage" class="warning-message hidden">¡Debes iniciar sesión para crear un blog o comentar!</div>
+    <!-- Pantalla de inicio de sesión -->
+    <div id="login" class="screen">
+      <h1>Iniciar Sesión</h1>
+      <input type="text" placeholder="Usuario"><br><br>
+      <input type="password" placeholder="Contraseña"><br><br>
+      <button class="btn">Entrar</button><br>
+      <button class="btn back-btn" onclick="showScreen('main')">Volver</button>
+    </div>
+
+    <!-- Pantalla de registro -->
+    <div id="register" class="screen">
+      <h1>Registrarse</h1>
+      <input type="text" placeholder="Usuario"><br><br>
+      <input type="email" placeholder="Correo"><br><br>
+      <input type="password" placeholder="Contraseña"><br><br>
+      <button class="btn">Crear Cuenta</button><br>
+      <button class="btn back-btn" onclick="showScreen('main')">Volver</button>
+    </div>
   </div>
 
-  <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-    const SUPABASE_URL = "https://jdvwlfogkzrzovepzjqa.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkdndsZm9na3pyem92ZXB6anFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzY1MjEsImV4cCI6MjA3MzYxMjUyMX0.IwVFrvuluY0tfgE82XnqYSsRjFPsDYnlfyirHjKu1TI";
-    window.supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    function getCurrentUser() { return JSON.parse(localStorage.getItem("currentUser")) || {}; }
-    function isUserLoggedIn() { return !!getCurrentUser().username; }
-
-    function toggleBlogForm() {
-      if (!isUserLoggedIn()) { document.getElementById("warningMessage").classList.remove("hidden"); return; }
-      document.getElementById("warningMessage").classList.add("hidden");
-      document.getElementById("blogForm").classList.toggle("hidden");
-    }
-    window.toggleBlogForm = toggleBlogForm;
-
-    async function publishBlog() {
-      if (!isUserLoggedIn()) { document.getElementById("warningMessage").classList.remove("hidden"); return; }
-      document.getElementById("warningMessage").classList.add("hidden");
-
-      const title = document.getElementById("blogTitle").value.trim();
-      const content = document.getElementById("blogContent").value.trim();
-      const user = getCurrentUser();
-
-      if (!title || !content) { alert("Por favor, completa el título y el contenido."); return; }
-
-      let mediaUrl = null;
-      const fileInput = document.getElementById("blogMedia");
-      if (fileInput.files.length > 0) {
-        const file = fileInput.files[0];
-        const fileName = `${Date.now()}_${file.name}`;
-        const { error: uploadError } = await supabase.storage.from('blog-media').upload(fileName, file);
-        if (uploadError) { alert("❌ Error al subir el archivo: " + uploadError.message); return; }
-        const { publicURL } = supabase.storage.from('blog-media').getPublicUrl(fileName);
-        mediaUrl = publicURL;
-      }
-
-      const { error } = await supabase.from("blogs").insert([
-        { title, content, author: user.username || "Anónimo", media: mediaUrl, comments: [] }
-      ]);
-
-      if (error) { alert("❌ Error al publicar blog"); console.error(error); return; }
-
-      // recarga blogs en pantalla
-      await displayBlogs();
-      document.getElementById("blogTitle").value = "";
-      document.getElementById("blogContent").value = "";
-      fileInput.value = "";
-      document.getElementById("blogForm").classList.add("hidden");
-    }
-    window.publishBlog = publishBlog;
-
-    async function displayBlogs() {
-  const { data: blogs, error } = await supabase
-    .from("blogs")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (error) { 
-    console.error(error); 
-    return; 
-  }
-
-  const container = document.getElementById("blogsList");
-  container.innerHTML = "";
-
-  blogs.forEach(blog => {
-    container.innerHTML += `
-      <div class="blog-post" onclick="openBlog('${blog.id}')">
-        <h3>${blog.title}</h3>
-        <p><strong>Autor:</strong> ${blog.author}</p>
-      </div>`;
-  });
-
-  // Guardamos blogs en memoria para abrirlos luego
-  window.cachedBlogs = blogs;
-}
-
-    function openBlog(id) {
-  const blogId = String(id).trim();
-  const blog = window.cachedBlogs.find(b => String(b.id).trim() === blogId);
-
-  if (!blog) {
-    alert("❌ Blog no encontrado");
-    return;
-  }
-
-  const detailsContainer = document.getElementById("blogDetails");
-  detailsContainer.innerHTML = `
-      <h2>${blog.title}</h2>
-      ${blog.media ? `<img src="${blog.media}" alt="Media del blog">` : ''}
-      <p>${blog.content || "Sin contenido"}</p>
-      <p><strong>Autor:</strong> ${blog.author}</p>
-      <button onclick="closeBlog()">Cerrar</button>
-      <div class="comment-section">
-          <h3>Comentarios</h3>
-          <input type="text" id="commentInput${blog.id}" placeholder="Escribe un comentario..." style="width: 100%; padding: 8px;">
-          <button onclick="postComment('${blog.id}')">Comentar</button>
-          <div id="comments${blog.id}"></div>
-      </div>
-  `;
-
-  // 1) Hacemos visible el contenedor (quitamos display:none)
-  detailsContainer.classList.remove("hidden");
-
-  // 2) Forzamos reflow para que el navegador aplique el estado "max-height: 0" antes de añadir .show
-  //    Esto asegura que la transición se dispare.
-  void detailsContainer.offsetHeight; // <<-- aquí está el truco
-
-  // 3) Añadimos la clase que expande (animación)
-  detailsContainer.classList.add("show");
-
-  // Opcional: ocultar la lista de blogs si quieres que se muestre solo el detalle
-  // document.getElementById("blogsList").classList.add("hidden");
-
-  // Desplazamos suavemente hasta el detalle (un pelín después para que empiece la animación)
-  setTimeout(() => detailsContainer.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
-
-  displayComments(blog.id);
-}
-
-function closeBlog() {
-  const detailsContainer = document.getElementById("blogDetails");
-
-  // Quitamos la clase .show para que haga la transición de cierre
-  detailsContainer.classList.remove("show");
-
-  // Esperamos la duración de la transición antes de volver a aplicar display:none
-  setTimeout(() => {
-    detailsContainer.classList.add("hidden");
-    // Volver a mostrar la lista de blogs si la ocultaste
-    // document.getElementById("blogsList").classList.remove("hidden");
-  }, 500); // coincide con la duración de transición (0.45s -> 450ms), he puesto 500ms por seguridad
-}
-
-
-    async function postComment(blogId) {
-  if (!isUserLoggedIn()) { 
-    document.getElementById("warningMessage").classList.remove("hidden"); 
-    return; 
-  }
-  document.getElementById("warningMessage").classList.add("hidden");
-
-  const commentText = document.getElementById(`commentInput${blogId}`).value.trim();
-  const user = getCurrentUser();
-  if (!commentText) return;
-
-  // Obtener comentarios actuales
-  const { data, error } = await supabase
-    .from("blogs")
-    .select("comments")
-    .eq("id", blogId)
-    .single();
-
-  if (error) return console.error(error);
-
-let comments = Array.isArray(data.comments) ? data.comments : [];
-comments.push({ author: user.username || "Anónimo", text: commentText });
-
-
-document.getElementById(`commentInput${blogId}`).value = "";
-
-
-  const { error: updateError } = await supabase
-    .from("blogs")
-    .update({ comments })
-    .eq("id", blogId);
-
-  if (updateError) return console.error(updateError);
-
-  displayComments(blogId);
-}
-
-async function displayComments(blogId) {
-  const { data, error } = await supabase
-    .from("blogs")
-    .select("comments")
-    .eq("id", blogId)
-    .single();
-
-  if (error) return console.error(error);
-
-  const commentsContainer = document.getElementById(`comments${blogId}`);
-  const comments = Array.isArray(data.comments) ? data.comments : [];
-
-  if (comments.length === 0) {
-    commentsContainer.innerHTML = "<p>No hay comentarios todavía.</p>";
-  } else {
-    commentsContainer.innerHTML = comments
-      .map(c => `<p><strong>${c.author}:</strong> ${c.text}</p>`)
-      .join("");
-  }
-}
-    function goToSettings() { window.location.href = 'ajustes.html'; }
-    function logout() { localStorage.removeItem("currentUser"); window.location.href = 'login.html'; }
-
-    function loadUserInfo() {
-      const user = getCurrentUser();
-      const authContainer = document.getElementById("authContainer");
-      const userInfo = document.getElementById("userInfo");
-      if (user.username) {
-        userInfo.style.display = "flex";
-        authContainer.style.display = "none";
-        document.getElementById("userName").textContent = user.username;
-        document.getElementById("userLogo").src = user.logo || "logoDefault.png";
-      } else {
-        userInfo.style.display = "none";
-        authContainer.style.display = "flex";
-      }
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      loadUserInfo();
-      displayBlogs();
-
-      const userInfo = document.getElementById("userInfo");
-      const dropdownMenu = document.getElementById("dropdownMenu");
-      userInfo.addEventListener("click", () => {
-        dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
+  <script>
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(screen => {
+        screen.classList.remove('active');
       });
-      document.addEventListener("click", (event) => {
-        if (!userInfo.contains(event.target) && !dropdownMenu.contains(event.target)) {
-          dropdownMenu.style.display = "none";
-        }
-      });
-    });
+      document.getElementById(screenId).classList.add('active');
+    }
   </script>
 </body>
+</html>
