@@ -220,7 +220,6 @@ async function loadComments(blogId) {
 });
 }
 
-// Publicar comentario
 async function publishComment() {
   const user = getCurrentUser();
   if (!user) { 
@@ -234,18 +233,28 @@ async function publishComment() {
     return; 
   }
 
- const { error } = await db.from("comments").insert([{
-  blog_id: window.currentBlogId,
-  author: user.username,
-  comment: commentText   // <-- usar "comment" exacto
-}]);
+  // DEBUG: mostrar los datos que vamos a insertar
+  console.log("Intentando insertar comentario:", {
+    blog_id: window.currentBlogId,
+    author: user.username,
+    comment: commentText
+  });
 
-  if (error) { 
-    console.error(error); 
-    alert("Error al publicar comentario"); 
-    return; 
+  const { data, error } = await db.from("comments").insert([{
+    blog_id: window.currentBlogId,
+    author: user.username,
+    comment: commentText
+  }]);
+
+  if (error) {
+    console.error("Error de Supabase al publicar comentario:", error);
+    alert(
+      `❌ Error al publicar comentario:\nMensaje: ${error.message}\nCódigo: ${error.code || "N/A"}\nDetalle: ${error.details || error.hint || "Sin más información"}`
+    );
+    return;
   }
 
+  
   document.getElementById("newCommentText").value = "";
   loadComments(window.currentBlogId);
 }
