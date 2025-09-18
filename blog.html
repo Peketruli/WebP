@@ -84,98 +84,101 @@
     </div>
   </div>
 
-  <script>
-    // 🔹 Supabase
-    const { createClient } = supabase;
-    const SUPABASE_URL = "https://jdvwlfogkzrzovepzjqa.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkdndsZm9na3pyem92ZXB6anFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzY1MjEsImV4cCI6MjA3MzYxMjUyMX0.IwVFrvuluY0tfgE82XnqYSsRjFPsDYnlfyirHjKu1TI";
-    const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+ <script>
+  // Conectar con tu Supabase
+  const { createClient } = supabase;
+  const SUPABASE_URL = "TU_URL_SUPABASE"; // reemplaza con la tuya
+  const SUPABASE_KEY = "TU_API_KEY";       // reemplaza con tu API Key
+  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // 🔹 Funciones de usuario
-    function getCurrentUser() { return JSON.parse(localStorage.getItem("currentUser")) || null; }
-    function isUserLoggedIn() { return !!getCurrentUser(); }
+  // Funciones de usuario
+  function getCurrentUser() { return JSON.parse(localStorage.getItem("currentUser")) || null; }
+  function isUserLoggedIn() { return !!getCurrentUser(); }
 
-    function loadUserInfo() {
-      const user = getCurrentUser();
-      const authContainer = document.getElementById("authContainer");
-      const userInfo = document.getElementById("userInfo");
+  function loadUserInfo() {
+    const user = getCurrentUser();
+    const authContainer = document.getElementById("authContainer");
+    const userInfo = document.getElementById("userInfo");
 
-      if (user) {
-        userInfo.style.display = "flex";
-        authContainer.style.display = "none";
-        document.getElementById("userName").textContent = user.username || "Usuario";
-        document.getElementById("userLogo").src = user.logo || "logoDefault.png";
-      } else {
-        userInfo.style.display = "none";
-        authContainer.style.display = "flex";
-      }
+    if (user) {
+      userInfo.style.display = "flex";
+      authContainer.style.display = "none";
+      document.getElementById("userName").textContent = user.username || "Usuario";
+      document.getElementById("userLogo").src = user.logo || "logoDefault.png";
+    } else {
+      userInfo.style.display = "none";
+      authContainer.style.display = "flex";
     }
+  }
 
-    function goToSettings() { window.location.href = 'ajustes.html'; }
-    function logout() { localStorage.removeItem("currentUser"); window.location.href = 'login.html'; }
+  function goToSettings() { window.location.href = 'ajustes.html'; }
+  function logout() { localStorage.removeItem("currentUser"); window.location.href = 'login.html'; }
 
-    // 🔹 Dropdown
-    const userInfoDiv = document.getElementById("userInfo");
-    const dropdownMenu = document.getElementById("dropdownMenu");
-    userInfoDiv.addEventListener("click", () => {
-      dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
+  // Dropdown menú
+  const userInfoDiv = document.getElementById("userInfo");
+  const dropdownMenu = document.getElementById("dropdownMenu");
+  userInfoDiv.addEventListener("click", () => {
+    dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
+  });
+  document.addEventListener("click", (e) => {
+    if (!userInfoDiv.contains(e.target) && !dropdownMenu.contains(e.target)) dropdownMenu.style.display = "none";
+  });
+
+  // Mostrar / ocultar formulario de nuevo blog
+  function showNewBlogForm() {
+    if (!isUserLoggedIn()) { alert("Debes iniciar sesión para publicar un blog"); return; }
+    document.getElementById("newBlogForm").classList.remove("hidden");
+  }
+  function hideNewBlogForm() { document.getElementById("newBlogForm").classList.add("hidden"); }
+
+  // Cargar blogs desde Supabase
+  async function loadBlogs() {
+    const { data, error } = await db.from("blog").select("*").order("created_at", { ascending: false });
+    if (error) { console.error(error); return; }
+
+    const blogsList = document.getElementById("blogsList");
+    blogsList.innerHTML = "";
+    data.forEach(blog => {
+      const div = document.createElement("div");
+      div.className = "blog-post";
+      div.innerHTML = `<h3>${blog.title}</h3><p>${blog.content.substring(0, 100)}...</p>`;
+      div.onclick = () => openBlog(blog);
+      blogsList.appendChild(div);
     });
-    document.addEventListener("click", (e) => {
-      if (!userInfoDiv.contains(e.target) && !dropdownMenu.contains(e.target)) dropdownMenu.style.display = "none";
-    });
+  }
 
-    // 🔹 Mostrar/ocultar formulario
-    function showNewBlogForm() {
-      if (!isUserLoggedIn()) { alert("Debes iniciar sesión para publicar un blog"); return; }
-      document.getElementById("newBlogForm").classList.remove("hidden");
-    }
-    function hideNewBlogForm() { document.getElementById("newBlogForm").classList.add("hidden"); }
+  // Abrir blog
+  function openBlog(blog) {
+    document.getElementById("blogTitleDetail").textContent = blog.title;
+    document.getElementById("blogContentDetail").textContent = blog.content;
+    document.getElementById("blogsList").classList.add("hidden");
+    document.getElementById("blogDetails").classList.remove("hidden");
+  }
 
-    // 🔹 Cargar blogs
-    async function loadBlogs() {
-      const { data, error } = await db.from("blog").select("*").order("created_at", { ascending: false });
-      if (error) { console.error(error); return; }
-      const blogsList = document.getElementById("blogsList");
-      blogsList.innerHTML = "";
-      data.forEach(blog => {
-        const div = document.createElement("div");
-        div.className = "blog-post";
-        div.innerHTML = `<h3>${blog.title}</h3><p>${blog.content.substring(0, 100)}...</p>`;
-        div.onclick = () => openBlog(blog);
-        blogsList.appendChild(div);
-      });
-    }
+  function closeBlog() {
+    document.getElementById("blogDetails").classList.add("hidden");
+    document.getElementById("blogsList").classList.remove("hidden");
+  }
 
-    function openBlog(blog) {
-      document.getElementById("blogTitleDetail").textContent = blog.title;
-      document.getElementById("blogContentDetail").textContent = blog.content;
-      document.getElementById("blogsList").classList.add("hidden");
-      document.getElementById("blogDetails").classList.remove("hidden");
-    }
+  // Publicar blog en Supabase
+  async function publishBlog() {
+    const title = document.getElementById("newTitle").value.trim();
+    const content = document.getElementById("newContent").value.trim();
+    if (!title || !content) { alert("Completa todos los campos"); return; }
 
-    function closeBlog() {
-      document.getElementById("blogDetails").classList.add("hidden");
-      document.getElementById("blogsList").classList.remove("hidden");
-    }
+    const user = getCurrentUser() || { username: "Anónimo" };
 
-    // 🔹 Publicar blog
-    async function publishBlog() {
-      const title = document.getElementById("newTitle").value.trim();
-      const content = document.getElementById("newContent").value.trim();
-      if (!title || !content) { alert("Completa todos los campos"); return; }
+    const { error } = await db.from("blog").insert([{ title, content, author: user.username }]);
+    if (error) { console.error(error); alert("Error al publicar"); return; }
 
-      const user = getCurrentUser() || { username: "Anónimo" };
-      const { error } = await db.from("blog").insert([{ title, content, author: user.username }]);
-      if (error) { console.error(error); alert("Error al publicar"); return; }
+    hideNewBlogForm();
+    loadBlogs(); // recargar blogs
+  }
 
-      hideNewBlogForm();
-      loadBlogs();
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      loadUserInfo();
-      loadBlogs();
-    });
-  </script>
+  document.addEventListener("DOMContentLoaded", () => {
+    loadUserInfo();
+    loadBlogs();
+  });
+</script>
 </body>
 </html>
