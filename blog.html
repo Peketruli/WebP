@@ -162,6 +162,10 @@ div.innerHTML = `
     document.getElementById("blogContentDetail").textContent = blog.content;
     document.getElementById("blogsList").classList.add("hidden");
     document.getElementById("blogDetails").classList.remove("hidden");
+  <p>${blog.content}</p>
+  <p style="font-size: 0.9em; color: gray;">Autor: ${blog.author || "Anónimo"}</p>
+`;
+
   }
 
   function closeBlog() {
