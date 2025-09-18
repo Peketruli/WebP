@@ -233,12 +233,6 @@ async function publishComment() {
     return; 
   }
 
-  // DEBUG visible sin consola
-alert("Intentando insertar comentario:\n" +
-  "blog_id: " + window.currentBlogId + "\n" +
-  "author: " + user.username + "\n" +
-  "comment: " + commentText
-);
 
   const { data, error } = await db.from("comments").insert([{
     blog_id: window.currentBlogId,
@@ -249,7 +243,7 @@ alert("Intentando insertar comentario:\n" +
   if (error) {
     console.error("Error de Supabase al publicar comentario:", error);
     alert(
-      `❌ Error al publicar comentario:\nMensaje: ${error.message}\nCódigo: ${error.code || "N/A"}\nDetalle: ${error.details || error.hint || "Sin más información"}`
+      `❌ Error al publicar comentario}`
     );
     return;
   }
