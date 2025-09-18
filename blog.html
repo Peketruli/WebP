@@ -31,21 +31,17 @@
     .blog-post { border: 1px solid #ddd; padding: 10px; margin: 10px 0; cursor: pointer; background: #f9f9f9; border-radius: 5px; }
 
 .blog-details {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.45s ease, padding 0.45s ease;
-  padding: 0 20px; /* padding inicial (alto 0 para poder animar hacia padding:20px) */
-  background: white;
-  margin-top: 20px;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  pointer-events: none; /* evita clicks cuando está oculto */
 }
 
 .blog-details.show {
-  max-height: 1000px; /* suficiente para la mayoría de contenidos (ajusta si hace falta) */
-  padding: 20px; /* padding final */
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
-
 
     .blog-form { margin-top: 20px; }
     .blog-details { padding: 20px; background: white; margin-top: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
@@ -177,62 +173,16 @@
   window.cachedBlogs = blogs;
 }
 
-    function openBlog(id) {
-  const blogId = String(id).trim();
-  const blog = window.cachedBlogs.find(b => String(b.id).trim() === blogId);
-
-  if (!blog) {
-    alert("❌ Blog no encontrado");
-    return;
-  }
-
-  const detailsContainer = document.getElementById("blogDetails");
-  detailsContainer.innerHTML = `
-      <h2>${blog.title}</h2>
-      ${blog.media ? `<img src="${blog.media}" alt="Media del blog">` : ''}
-      <p>${blog.content || "Sin contenido"}</p>
-      <p><strong>Autor:</strong> ${blog.author}</p>
-      <button onclick="closeBlog()">Cerrar</button>
-      <div class="comment-section">
-          <h3>Comentarios</h3>
-          <input type="text" id="commentInput${blog.id}" placeholder="Escribe un comentario..." style="width: 100%; padding: 8px;">
-          <button onclick="postComment('${blog.id}')">Comentar</button>
-          <div id="comments${blog.id}"></div>
-      </div>
-  `;
-
-  // 1) Hacemos visible el contenedor (quitamos display:none)
-  detailsContainer.classList.remove("hidden");
-
-  // 2) Forzamos reflow para que el navegador aplique el estado "max-height: 0" antes de añadir .show
-  //    Esto asegura que la transición se dispare.
-  void detailsContainer.offsetHeight; // <<-- aquí está el truco
-
-  // 3) Añadimos la clase que expande (animación)
-  detailsContainer.classList.add("show");
-
-  // Opcional: ocultar la lista de blogs si quieres que se muestre solo el detalle
-  // document.getElementById("blogsList").classList.add("hidden");
-
-  // Desplazamos suavemente hasta el detalle (un pelín después para que empiece la animación)
-  setTimeout(() => detailsContainer.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
-
-  displayComments(blog.id);
+    function openBlog() {
+  const details = document.getElementById("blogDetails");
+  details.classList.add("show");
 }
 
 function closeBlog() {
-  const detailsContainer = document.getElementById("blogDetails");
-
-  // Quitamos la clase .show para que haga la transición de cierre
-  detailsContainer.classList.remove("show");
-
-  // Esperamos la duración de la transición antes de volver a aplicar display:none
-  setTimeout(() => {
-    detailsContainer.classList.add("hidden");
-    // Volver a mostrar la lista de blogs si la ocultaste
-    // document.getElementById("blogsList").classList.remove("hidden");
-  }, 500); // coincide con la duración de transición (0.45s -> 450ms), he puesto 500ms por seguridad
+  const details = document.getElementById("blogDetails");
+  details.classList.remove("show");
 }
+
 
     async function postComment(blogId) {
   if (!isUserLoggedIn()) { 
