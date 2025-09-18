@@ -197,34 +197,58 @@
   }
 
   // Comentarios
-  async function loadComments(blogId) {
-    const { data, error } = await db.from("comments").select("*").eq("blog_id", blogId).order("created_at", { ascending: true });
-    const commentsList = document.getElementById("commentsList");
-    commentsList.innerHTML = "";
+  // Mostrar comentarios
+async function loadComments(blogId) {
+  const { data, error } = await db.from("comments").select("*").eq("blog_id", blogId).order("created_at", { ascending: true });
+  const commentsList = document.getElementById("commentsList");
+  commentsList.innerHTML = "";
 
-    if (error) { console.error(error); commentsList.innerHTML = "<p>Error al cargar comentarios</p>"; return; }
-    if (data.length === 0) { commentsList.innerHTML = "<p>No hay comentarios todavía.</p>"; return; }
-
-    data.forEach(comment => {
-      const div = document.createElement("div");
-      div.innerHTML = `<strong>${comment.author}</strong>: ${comment.content}`;
-      commentsList.appendChild(div);
-    });
+  if (error) { 
+    console.error(error); 
+    commentsList.innerHTML = "<p>Error al cargar comentarios</p>"; 
+    return; 
+  }
+  if (data.length === 0) { 
+    commentsList.innerHTML = "<p>No hay comentarios todavía.</p>"; 
+    return; 
   }
 
-  async function publishComment() {
-    const user = getCurrentUser();
-    if (!user) { alert("Debes iniciar sesión para comentar"); return; }
+  data.forEach(comment => {
+    const div = document.createElement("div");
+    div.innerHTML = `<strong>${comment.author}</strong>: ${comment.coment}`; // <-- aqui 'coment'
+    commentsList.appendChild(div);
+  });
+}
 
-    const commentText = document.getElementById("newCommentText").value.trim();
-    if (!commentText) { alert("Escribe un comentario"); return; }
-
-    const { error } = await db.from("comments").insert([{ blog_id: window.currentBlogId, author: user.username, content: commentText }]);
-    if (error) { console.error(error); alert("Error al publicar comentario"); return; }
-
-    document.getElementById("newCommentText").value = "";
-    loadComments(window.currentBlogId);
+// Publicar comentario
+async function publishComment() {
+  const user = getCurrentUser();
+  if (!user) { 
+    alert("Debes iniciar sesión para comentar"); 
+    return; 
   }
+
+  const commentText = document.getElementById("newCommentText").value.trim();
+  if (!commentText) { 
+    alert("Escribe un comentario"); 
+    return; 
+  }
+
+  const { error } = await db.from("comments").insert([{
+    blog_id: window.currentBlogId,
+    author: user.username,
+    coment: commentText   // <-- aqui 'coment'
+  }]);
+
+  if (error) { 
+    console.error(error); 
+    alert("Error al publicar comentario"); 
+    return; 
+  }
+
+  document.getElementById("newCommentText").value = "";
+  loadComments(window.currentBlogId);
+}
 </script>
 </body>
 </html>
