@@ -91,45 +91,43 @@
 
     // --- CARGAR CHATS ---
     async function cargarChats() {
-        const { data, error } = await supabase
-            .from("chats")
-            .select("*")
-            .order("created_at", { ascending: true });
-
-        const chatList = document.getElementById("chat-list");
-        chatList.innerHTML = "";
-
-        if (error) { console.error(error); return; }
-
-        data.forEach(chat => {
-            const li = document.createElement("li");
-            li.textContent = chat.nombre;
-            li.onclick = () => abrirChat(chat);
-            chatList.appendChild(li);
-        });
-
-        // Si acabamos de crear un chat, lo abrimos automáticamente
-        if (chatActual) {
-            abrirChat(chatActual);
-        }
+    const { data: chats, error } = await db.from("chats").select("*").order('created_at', { ascending: true });
+    if (error) {
+        console.log("Error cargando chats:", error.message);
+        return;
     }
 
-    // --- CREAR CHAT ---
+    const lista = document.getElementById("club-list");
+    lista.innerHTML = "";
+
+    chats.forEach(chat => {
+        const li = document.createElement("li");
+        li.textContent = chat.nombre;
+        li.style.cursor = "pointer";
+        li.onclick = () => abrirChat(chat.id); // abrir chat al hacer click
+        lista.appendChild(li);
+    });
+}
+
+
     async function crearChat() {
-        const nombre = prompt("Nombre del chat:");
-        if (!nombre) return;
+    const nombre = prompt("Introduce el nombre del chat:");
+    if (!nombre) return;
 
-        const { data, error } = await supabase
-            .from("chats")
-            .insert([{ nombre, creador: usuario.username, miembros: [usuario.username] }])
-            .select()
-            .single();
+    const { data, error } = await db.from("chats").insert([{
+        nombre: nombre,
+        creador: usuario.username,
+        miembros: [usuario.username] // esto ahora sí funciona
+    }]).select().single(); // select() para que devuelva los datos recién insertados
 
-        if (error) { alert("Error al crear chat: " + error.message); return; }
-
-        chatActual = data; // Guardamos el chat recién creado
-        cargarChats(); // Recargar lista de chats y abrirlo
+    if (error) {
+        alert("Error al crear chat: " + error.message);
+        return;
     }
+
+    cargarChats(); // recarga la lista de chats
+    abrirChat(data.id); // abre el chat recién creado
+}
 
     // --- ABRIR CHAT ---
     async function abrirChat(chat) {
