@@ -2,76 +2,71 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Blog</title>
+  <title>Blog - Rebeldía IN.AR</title>
   <script src="https://unpkg.com/@supabase/supabase-js"></script>
   <style>
     body {
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      background: linear-gradient(135deg, #111, #222);
-      color: white;
-      font-family: Arial, sans-serif;
-      padding: 20px;
-    }
-    .container {
-      width: 100%;
-      max-width: 800px;
-    }
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .btn {
-      margin: 10px 0;
-      padding: 10px 15px;
-      background: #e11d48;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 15px;
-    }
-    .btn:hover {
-      background: #be123c;
-    }
-    .blog-list, .blog-details, .new-blog {
-      background: white;
+      background: linear-gradient(45deg, #FF5733, #FF8D1A, #FFC300, #FF5733);
+      background-size: 400% 400%;
+      animation: gradientBG 10s ease infinite;
       color: black;
-      padding: 20px;
-      border-radius: 10px;
-      margin-bottom: 20px;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 50px;
+      margin-bottom: 100px;
     }
-    .blog-post {
-      border-bottom: 1px solid #ccc;
-      padding: 10px 0;
-      cursor: pointer;
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
-    .blog-post:last-child {
-      border-bottom: none;
-    }
-    .hidden {
-      display: none;
-    }
-    input, textarea {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
+
+    /* Botones de inicio de sesión / usuario */
+    .auth-container, .user-info { position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 10px; }
+    .auth-button { padding: 10px 20px; font-size: 1em; color: white; background-color: #333; border: none; cursor: pointer; border-radius: 5px; }
+    .user-info { display: none; cursor: pointer; }
+    #userLogo { width: 40px; height: 40px; border-radius: 50%; }
+    #userName { font-weight: bold; }
+
+    /* Dropdown */
+    .dropdown-menu { display: none; position: absolute; top: 60px; right: 20px; background: white; color: black; border-radius: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); width: 150px; text-align: left; }
+    .dropdown-menu td { padding: 10px; cursor: pointer; }
+    .dropdown-menu td:hover { background-color: #ddd; }
+
+    /* Contenedor de blogs */
+    .blog-container { max-width: 800px; margin: auto; padding: 20px; text-align: center; }
+    .blog-post, .new-blog, .blog-details { background: white; color: black; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+    .blog-post { cursor: pointer; border: 1px solid #ddd; }
+    .hidden { display: none; }
+    input, textarea { width: 100%; padding: 10px; margin: 8px 0; border-radius: 6px; border: 1px solid #ccc; }
+
+    .btn { padding: 10px 15px; border: none; border-radius: 8px; background: #e11d48; color: white; cursor: pointer; margin: 5px; }
+    .btn:hover { background: #be123c; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Blog</h1>
+  <button class="btn" onclick="window.location.href='PaginaPrincipal.html'">🏠 Volver a la Página Principal</button>
 
-    <!-- Botón publicar -->
+  <div class="auth-container" id="authContainer">
+    <button class="auth-button" onclick="window.location.href='login.html'">Iniciar sesión o registrarse</button>
+  </div>
+
+  <div class="user-info" id="userInfo">
+    <h3 id="userName"></h3>
+    <img id="userLogo" src="logoDefault.png" alt="Logo del usuario">
+  </div>
+
+  <div class="dropdown-menu" id="dropdownMenu">
+    <table>
+      <tr><td onclick="goToSettings()">⚙ Ajustes</td></tr>
+      <tr><td onclick="logout()">🚪 Cerrar sesión</td></tr>
+    </table>
+  </div>
+
+  <div class="blog-container">
+    <h1>Blog</h1>
     <button class="btn" onclick="showNewBlogForm()">➕ Publicar nuevo blog</button>
 
-    <!-- Formulario nuevo blog -->
     <div id="newBlogForm" class="new-blog hidden">
       <h2>Nuevo Blog</h2>
       <input type="text" id="newTitle" placeholder="Título">
@@ -80,30 +75,66 @@
       <button class="btn" onclick="hideNewBlogForm()">Cancelar</button>
     </div>
 
-    <!-- Lista de blogs -->
-    <div id="blogsList" class="blog-list"></div>
+    <div id="blogsList"></div>
 
-    <!-- Detalles de blog -->
     <div id="blogDetails" class="blog-details hidden">
-      <h2 id="blogTitle"></h2>
-      <p id="blogContent"></p>
+      <h2 id="blogTitleDetail"></h2>
+      <p id="blogContentDetail"></p>
       <button class="btn" onclick="closeBlog()">Volver</button>
     </div>
   </div>
 
   <script>
-    // 🔹 Configura Supabase
+    // 🔹 Supabase
     const { createClient } = supabase;
-    const supabaseUrl = "https://jdvwlfogkzrzovepzjqa.supabase.co";
-    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkdndsZm9na3pyem92ZXB6anFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzY1MjEsImV4cCI6MjA3MzYxMjUyMX0.IwVFrvuluY0tfgE82XnqYSsRjFPsDYnlfyirHjKu1TI";
-    const db = createClient(supabaseUrl, supabaseKey);
+    const SUPABASE_URL = "https://jdvwlfogkzrzovepzjqa.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkdndsZm9na3pyem92ZXB6anFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzY1MjEsImV4cCI6MjA3MzYxMjUyMX0.IwVFrvuluY0tfgE82XnqYSsRjFPsDYnlfyirHjKu1TI";
+    const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // 🔹 Funciones de usuario
+    function getCurrentUser() { return JSON.parse(localStorage.getItem("currentUser")) || null; }
+    function isUserLoggedIn() { return !!getCurrentUser(); }
+
+    function loadUserInfo() {
+      const user = getCurrentUser();
+      const authContainer = document.getElementById("authContainer");
+      const userInfo = document.getElementById("userInfo");
+
+      if (user) {
+        userInfo.style.display = "flex";
+        authContainer.style.display = "none";
+        document.getElementById("userName").textContent = user.username || "Usuario";
+        document.getElementById("userLogo").src = user.logo || "logoDefault.png";
+      } else {
+        userInfo.style.display = "none";
+        authContainer.style.display = "flex";
+      }
+    }
+
+    function goToSettings() { window.location.href = 'ajustes.html'; }
+    function logout() { localStorage.removeItem("currentUser"); window.location.href = 'login.html'; }
+
+    // 🔹 Dropdown
+    const userInfoDiv = document.getElementById("userInfo");
+    const dropdownMenu = document.getElementById("dropdownMenu");
+    userInfoDiv.addEventListener("click", () => {
+      dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
+    });
+    document.addEventListener("click", (e) => {
+      if (!userInfoDiv.contains(e.target) && !dropdownMenu.contains(e.target)) dropdownMenu.style.display = "none";
+    });
+
+    // 🔹 Mostrar/ocultar formulario
+    function showNewBlogForm() {
+      if (!isUserLoggedIn()) { alert("Debes iniciar sesión para publicar un blog"); return; }
+      document.getElementById("newBlogForm").classList.remove("hidden");
+    }
+    function hideNewBlogForm() { document.getElementById("newBlogForm").classList.add("hidden"); }
+
+    // 🔹 Cargar blogs
     async function loadBlogs() {
       const { data, error } = await db.from("blog").select("*").order("created_at", { ascending: false });
-      if (error) {
-        console.error("Error cargando blogs:", error);
-        return;
-      }
+      if (error) { console.error(error); return; }
       const blogsList = document.getElementById("blogsList");
       blogsList.innerHTML = "";
       data.forEach(blog => {
@@ -116,8 +147,8 @@
     }
 
     function openBlog(blog) {
-      document.getElementById("blogTitle").textContent = blog.title;
-      document.getElementById("blogContent").textContent = blog.content;
+      document.getElementById("blogTitleDetail").textContent = blog.title;
+      document.getElementById("blogContentDetail").textContent = blog.content;
       document.getElementById("blogsList").classList.add("hidden");
       document.getElementById("blogDetails").classList.remove("hidden");
     }
@@ -127,43 +158,24 @@
       document.getElementById("blogsList").classList.remove("hidden");
     }
 
-    function showNewBlogForm() {
-      document.getElementById("newBlogForm").classList.remove("hidden");
-    }
-
-    function hideNewBlogForm() {
-      document.getElementById("newBlogForm").classList.add("hidden");
-    }
-
+    // 🔹 Publicar blog
     async function publishBlog() {
-      const title = document.getElementById("newTitle").value;
-      const content = document.getElementById("newContent").value;
+      const title = document.getElementById("newTitle").value.trim();
+      const content = document.getElementById("newContent").value.trim();
+      if (!title || !content) { alert("Completa todos los campos"); return; }
 
-      if (!title || !content) {
-        alert("Completa todos los campos");
-        return;
-      }
+      const user = getCurrentUser() || { username: "Anónimo" };
+      const { error } = await db.from("blog").insert([{ title, content, author: user.username }]);
+      if (error) { console.error(error); alert("Error al publicar"); return; }
 
-      // Aquí sacamos el usuario actual del localStorage
-      const user = JSON.parse(localStorage.getItem("currentUser")) || { username: "Anónimo" };
-
-      const { error } = await db.from("blog").insert([
-        { title, content, author: user.username }
-      ]);
-
-      if (error) {
-        console.error("Error publicando:", error);
-        alert("Hubo un error al publicar");
-        return;
-      }
-
-      alert("Blog publicado con éxito");
       hideNewBlogForm();
       loadBlogs();
     }
 
-    // 🔹 Cargar blogs al inicio
-    loadBlogs();
+    document.addEventListener("DOMContentLoaded", () => {
+      loadUserInfo();
+      loadBlogs();
+    });
   </script>
 </body>
 </html>
