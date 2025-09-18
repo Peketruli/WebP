@@ -148,7 +148,9 @@ document.addEventListener("DOMContentLoaded", () => {
     data.forEach(blog => {
       const div = document.createElement("div");
       div.className = "blog-post";
-      div.innerHTML = `<h3>${blog.title}</h3><p>${blog.content.substring(0, 100)}...</p>`;
+div.innerHTML = `
+  <h3>${blog.title}</h3>
+  <p style="font-size: 0.9em; color: gray;">Autor: ${blog.author || "Anónimo"}</p>`;
       div.onclick = () => openBlog(blog);
       blogsList.appendChild(div);
     });
