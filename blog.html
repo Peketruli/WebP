@@ -173,16 +173,45 @@
   window.cachedBlogs = blogs;
 }
 
-    function openBlog() {
-  const details = document.getElementById("blogDetails");
-  details.classList.add("show");
+    function openBlog(id) {
+  const blogId = String(id).trim();
+  const blog = window.cachedBlogs.find(b => String(b.id).trim() === blogId);
+
+  if (!blog) {
+    alert("❌ Blog no encontrado");
+    return;
+  }
+
+  const detailsContainer = document.getElementById("blogDetails");
+  detailsContainer.innerHTML = `
+      <h2>${blog.title}</h2>
+      ${blog.media ? `<img src="${blog.media}" alt="Media del blog">` : ''}
+      <p>${blog.content || "Sin contenido"}</p>
+      <p><strong>Autor:</strong> ${blog.author}</p>
+      <button onclick="closeBlog()">Cerrar</button>
+      <div class="comment-section">
+          <h3>Comentarios</h3>
+          <input type="text" id="commentInput${blog.id}" placeholder="Escribe un comentario..." style="width: 100%; padding: 8px;">
+          <button onclick="postComment('${blog.id}')">Comentar</button>
+          <div id="comments${blog.id}"></div>
+      </div>
+  `;
+
+  // mostrar con animación
+  detailsContainer.classList.add("show");
+
+  // scroll suave hasta el blog abierto
+  setTimeout(() => {
+    detailsContainer.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, 50);
+
+  displayComments(blog.id);
 }
 
 function closeBlog() {
-  const details = document.getElementById("blogDetails");
-  details.classList.remove("show");
+  const detailsContainer = document.getElementById("blogDetails");
+  detailsContainer.classList.remove("show");
 }
-
 
     async function postComment(blogId) {
   if (!isUserLoggedIn()) { 
