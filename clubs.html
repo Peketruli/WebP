@@ -6,223 +6,168 @@
     <script src="https://unpkg.com/@supabase/supabase-js"></script>
     <style>
         body {
-            margin: 0; padding: 0; height: 100vh;
-            background: linear-gradient(45deg, #111, #222, #333);
-            background-size: 400% 400%; animation: gradientBG 10s ease infinite;
-            display: flex; justify-content: flex-start; align-items: stretch;
+            margin: 0; padding: 0;
             font-family: Arial, sans-serif;
+            display: flex; height: 100vh;
+            background: #111; color: white;
         }
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        .sidebar {
+            width: 25%;
+            background: rgba(0,0,0,0.8);
+            padding: 20px;
+            overflow-y: auto;
         }
-        .back-button { position:absolute; top:20px; left:20px; background:#ff5733; color:white;
-            padding:10px 20px; border:none; border-radius:5px; cursor:pointer; z-index:1; }
-        .back-button:hover { background-color:#e04e2b; }
-        .left-container { width:30%; height:100vh; background:rgba(0,0,0,0.8); padding:20px;
-            color:white; display:flex; flex-direction:column; align-items:flex-start;
-            overflow-y:auto; padding-top:60px; box-sizing:border-box; }
-        .create-club-button { margin-top:20px; padding:10px 20px; background-color:#4CAF50;
-            color:white; border:none; border-radius:5px; cursor:pointer; font-size:16px; width:100%; }
-        .create-club-button:hover { background-color:#45a049; }
-        .clubs-container { width:100%; margin-top:20px; text-align:center; }
-        .chat-section { display:flex; width:70%; height:100vh; }
-        .chat-container { width:80%; height:100vh; background-color:rgba(20,20,20,0.9);
-            color:white; display:flex; flex-direction:column; justify-content:space-between; padding:20px; }
-        .messages { flex-grow:1; overflow-y:auto; border:1px solid #444; padding:10px; display:flex; flex-direction:column; }
-        .members-list { width:20%; background-color:#444; padding:20px; border-radius:10px; max-height:90%; overflow-y:auto; }
-        .message { margin:10px 0; padding:10px; border-radius:5px; background-color:#444; max-width:70%; }
-        .chat-input { display:flex; margin-top:10px; }
-        .chat-input input { flex-grow:1; padding:10px; border:none; border-radius:5px; background-color:#555; color:white; }
-        .chat-input button { padding:10px; background-color:#008CBA; color:white; border:none; border-radius:5px; cursor:pointer; }
-        .chat-input button:hover { background-color:#007bb5; }
-        .auth-container { display:flex; gap:10px; color:white; align-items:center; justify-content:center; margin-top:20px; }
-        .auth-button { padding:10px 20px; font-size:1em; color:white; background-color:#333; border:none; cursor:pointer; border-radius:5px; }
-        .auth-button:hover { background-color:#555; }
-        .members-list h3 { text-align:center; margin-bottom:10px; }
-        .members-list li { padding:5px; border-bottom:1px solid #fff; }
-        .creator { color:#FFD700 !important; font-weight:bold !important; }
+        .chat-section {
+            width: 75%;
+            display: flex; flex-direction: column;
+            background: rgba(20,20,20,0.9);
+        }
+        .chat-messages {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            border-bottom: 1px solid #444;
+        }
+        .chat-input {
+            display: flex; padding: 10px 20px;
+            border-top: 1px solid #444;
+        }
+        .chat-input input {
+            flex-grow: 1; padding: 10px;
+            border: none; border-radius: 5px;
+            margin-right: 10px;
+        }
+        .chat-input button {
+            padding: 10px 20px;
+            border: none; border-radius: 5px;
+            background: #008CBA; color: white;
+            cursor: pointer;
+        }
+        ul { list-style: none; padding: 0; }
+        li { padding: 10px; cursor: pointer; border-bottom: 1px solid #444; }
+        li:hover { background: #222; }
+        .members-list { margin-top: 20px; }
+        .creator { color: #FFD700; font-weight: bold; }
     </style>
 </head>
 <body>
-    <button class="back-button" onclick="window.location.href='PaginaPrincipal.html'">Volver</button>
+    <div class="sidebar">
+        <h2>Chats</h2>
+        <button onclick="crearChat()">Crear Chat</button>
+        <ul id="chat-list"></ul>
 
-    <div class="auth-container" id="authContainer">
-        <button class="auth-button" onclick="window.location.href='login.html'">Iniciar sesión o registrarse</button>
-    </div>
-
-    <div class="left-container" id="leftContainer" style="display:none;">
-        <h2>Lista de Chats</h2>
-        <button class="create-club-button" onclick="crearClub()">Crear Chat</button>
-        <div class="clubs-container">
-            <ul id="club-list"></ul>
+        <div class="members-list">
+            <h3>Miembros</h3>
+            <ul id="members-list"></ul>
         </div>
     </div>
 
-    <div class="chat-section" style="display:none;" id="chatSection">
-        <div class="chat-container" id="chatContainer">
-            <h2 id="club-title">Selecciona un chat</h2>
-            <div class="messages" id="messages"></div>
-            <div class="chat-input">
-                <input type="text" id="message-input" placeholder="Escribe un mensaje...">
-                <button onclick="enviarMensaje()">Enviar</button>
-            </div>
-            <button id="join-button" onclick="unirseAlChat()" style="display:none;">Unirse al chat</button>
+    <div class="chat-section">
+        <div class="chat-messages" id="chat-messages">
+            <p>Selecciona un chat para ver los mensajes...</p>
         </div>
-        <div class="members-list" id="members-list">
-            <h3>Miembros:</h3>
-            <ul id="members"></ul>
+        <div class="chat-input">
+            <input type="text" id="message-input" placeholder="Escribe un mensaje..." />
+            <button onclick="enviarMensaje()">Enviar</button>
         </div>
     </div>
 
 <script>
-    // Configuración Supabase
-    const SUPABASE_URL = "https://jdvwlfogkzrzovepzjqa.supabase.co"; // reemplaza con tu URL
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkdndsZm9na3pyem92ZXB6anFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzY1MjEsImV4cCI6MjA3MzYxMjUyMX0.IwVFrvuluY0tfgE82XnqYSsRjFPsDYnlfyirHjKu1TI"; // reemplaza con tu anon key
-    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // --- CONFIGURACIÓN SUPABASE ---
+    const SUPABASE_URL = "TU_URL_SUPABASE";
+    const SUPABASE_KEY = "TU_ANON_KEY";
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    let usuario = null;
-    let currentChatId = null;
-    let currentChat = null;
+    let usuario = { username: "Usuario" + Math.floor(Math.random()*1000) }; // usuario temporal
+    let chatActual = null;
 
-    document.addEventListener("DOMContentLoaded", async () => {
-        await verificarSesion();
-        cargarChats();
-    });
-
-    async function verificarSesion() {
-        const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-        if (currentUser) {
-            usuario = currentUser;
-            document.getElementById("authContainer").style.display = "none";
-            document.getElementById("leftContainer").style.display = "block";
-            document.getElementById("chatSection").style.display = "block";
-        }
-    }
-
-    async function crearClub() {
-        const nombre = prompt("Introduce el nombre del chat:");
-        if (!nombre) return;
-
-        const { data, error } = await db.from("chats").insert([{
-            nombre: nombre,
-            creador: usuario.username,
-            miembros: [usuario.username]
-        }]).select().single();
-
-        if (error) { alert("Error al crear chat: " + error.message); return; }
-
-        cargarChats();
-        abrirChat(data.id);
-    }
-
+    // --- CARGAR CHATS ---
     async function cargarChats() {
-        const { data, error } = await db.from("chats").select("*").order('created_at', { ascending:true });
-        const list = document.getElementById("club-list");
-        list.innerHTML = "";
-        if (error) return;
+        const { data, error } = await supabase
+            .from("chats")
+            .select("*")
+            .order("created_at", { ascending: true });
+
+        const chatList = document.getElementById("chat-list");
+        chatList.innerHTML = "";
+
+        if (error) { console.error(error); return; }
 
         data.forEach(chat => {
             const li = document.createElement("li");
             li.textContent = chat.nombre;
-            li.style.cursor = "pointer";
-            li.onclick = () => abrirChat(chat.id);
-            list.appendChild(li);
+            li.onclick = () => abrirChat(chat);
+            chatList.appendChild(li);
         });
     }
 
-    async function abrirChat(chatId) {
-        currentChatId = chatId;
-        const { data: chatData } = await db.from("chats").select("*").eq("id", chatId).single();
-        currentChat = chatData;
+    // --- CREAR CHAT ---
+    async function crearChat() {
+        const nombre = prompt("Nombre del chat:");
+        if (!nombre) return;
 
-        document.getElementById("club-title").textContent = chatData.nombre;
+        const { data, error } = await supabase
+            .from("chats")
+            .insert([{ nombre, creador: usuario.username, miembros: [usuario.username] }])
+            .select()
+            .single();
 
-        // Cargar mensajes
-        await cargarMensajes();
+        if (error) { alert("Error al crear chat: " + error.message); return; }
 
-        // Mostrar miembros
-        const membersUl = document.getElementById("members");
+        cargarChats();
+        abrirChat(data);
+    }
+
+    // --- ABRIR CHAT ---
+    async function abrirChat(chat) {
+        chatActual = chat;
+
+        // Cargar miembros
+        const membersUl = document.getElementById("members-list");
         membersUl.innerHTML = "";
-        chatData.miembros.forEach(member => {
+        chat.miembros.forEach(m => {
             const li = document.createElement("li");
-            li.textContent = member;
-            if (member === chatData.creador) li.classList.add("creator");
-
-            if (usuario.username === chatData.creador && member !== chatData.creador) {
-                const kickBtn = document.createElement("button");
-                kickBtn.textContent = "Expulsar";
-                kickBtn.onclick = () => expulsarMiembro(member);
-                li.appendChild(kickBtn);
-            }
+            li.textContent = m;
+            if (m === chat.creador) li.classList.add("creator");
             membersUl.appendChild(li);
         });
 
-        // Verificar si el usuario pertenece al chat
-        if (!chatData.miembros.includes(usuario.username)) {
-            document.getElementById("message-input").disabled = true;
-            document.querySelector("#chatContainer button").disabled = true;
-            document.getElementById("join-button").style.display = "block";
-        } else {
-            document.getElementById("message-input").disabled = false;
-            document.querySelector("#chatContainer button").disabled = false;
-            document.getElementById("join-button").style.display = "none";
-        }
-    }
+        // Cargar mensajes
+        const { data: mensajes, error } = await supabase
+            .from("chat_messages")
+            .select("*")
+            .eq("chat_id", chat.id)
+            .order("created_at", { ascending: true });
 
-    async function cargarMensajes() {
-        const { data: mensajes } = await db.from("chat_messages").select("*")
-            .eq("chat_id", currentChatId)
-            .order("created_at", { ascending:true });
+        const messagesDiv = document.getElementById("chat-messages");
+        messagesDiv.innerHTML = "";
+        if (error) { console.error(error); return; }
 
-        const container = document.getElementById("messages");
-        container.innerHTML = "";
         mensajes.forEach(m => {
-            const div = document.createElement("div");
-            div.className = "message";
-            div.textContent = `${m.author}: ${m.message}`;
-            container.appendChild(div);
+            const p = document.createElement("p");
+            p.textContent = `${m.author}: ${m.message}`;
+            messagesDiv.appendChild(p);
         });
-        container.scrollTop = container.scrollHeight;
     }
 
+    // --- ENVIAR MENSAJE ---
     async function enviarMensaje() {
-    const input = document.getElementById("message-input");
-    const texto = input.value.trim();
-    if (!texto || !currentChatId) return;
+        const input = document.getElementById("message-input");
+        const texto = input.value.trim();
+        if (!texto || !chatActual) return;
 
-    const { error } = await db.from("chat_messages").insert([{
-        chat_id: currentChatId,
-        author: usuario.username,
-        message: texto
-    }]);
+        const { error } = await supabase
+            .from("chat_messages")
+            .insert([{ chat_id: chatActual.id, author: usuario.username, message: texto }]);
 
-    if (error) return alert("Error al enviar mensaje: " + error.message);
+        if (error) { alert("Error al enviar mensaje: " + error.message); return; }
 
-    input.value = "";
-    await cargarMensajes();
-}
-    async function unirseAlChat() {
-    if (!currentChat) return;
-
-    const nuevosMiembros = [...currentChat.miembros, usuario.username];
-    await db.from("chats").update({ miembros: nuevosMiembros }).eq("id", currentChatId);
-
-    // Recargar chat actualizado
-    const { data: updatedChat } = await db.from("chats").select("*").eq("id", currentChatId).single();
-    currentChat = updatedChat;
-
-    abrirChat(currentChatId);
-}
-
-    async function expulsarMiembro(miembro) {
-        if (miembro === currentChat.creador) return alert("No puedes expulsar al creador");
-
-        const nuevosMiembros = currentChat.miembros.filter(m => m !== miembro);
-        await db.from("chats").update({ miembros: nuevosMiembros }).eq("id", currentChatId);
-        abrirChat(currentChatId);
+        input.value = "";
+        abrirChat(chatActual);
     }
+
+    // --- INICIALIZAR ---
+    cargarChats();
 </script>
 </body>
 </html>
