@@ -5,11 +5,30 @@
 <title>Login / Registro</title>
 <script src="https://unpkg.com/@supabase/supabase-js"></script>
 <style>
-body { font-family: Arial; text-align:center; padding:50px; background: linear-gradient(45deg,#FF5733,#FFC300,#FF5733); color:white; }
-.container { background:white; padding:20px; border-radius:10px; display:inline-block; color:black; }
-input, button { display:block; margin:10px auto; padding:10px; width:80%; }
-.hidden { display:none; }
-#error-message { color:red; font-size:0.9em; }
+body {
+    font-family: Arial; 
+    text-align:center; 
+    padding:50px; 
+    background: linear-gradient(45deg,#FF5733,#FFC300,#FF5733); 
+    color:white;
+}
+.container { 
+    background:white; 
+    padding:20px; 
+    border-radius:10px; 
+    display:inline-block; 
+    color:black; 
+}
+input, button { 
+    display:block; 
+    margin:10px auto; 
+    padding:10px; 
+    width:80%; 
+}
+#error-message { 
+    color:red; 
+    font-size:0.9em; 
+}
 </style>
 </head>
 <body>
@@ -50,10 +69,10 @@ document.getElementById("submitButton").addEventListener("click", async () => {
     }
 
     if (isRegistering) {
-        // Comprobar si username existe
+        // Verificar si username ya existe
         const { data: existingUser, error: selectError } = await supabase
             .from("users")
-            .select("*")
+            .select("id")
             .eq("username", username)
             .single();
 
@@ -62,7 +81,7 @@ document.getElementById("submitButton").addEventListener("click", async () => {
             return;
         }
 
-        // Insertar usuario
+        // Insertar nuevo usuario
         const { data, error: insertError } = await supabase
             .from("users")
             .insert([{ username, password }]);
@@ -78,7 +97,7 @@ document.getElementById("submitButton").addEventListener("click", async () => {
         document.getElementById("submitButton").textContent = "Iniciar Sesión";
         document.getElementById("error-message").textContent = '';
     } else {
-        // Login
+        // Iniciar sesión
         const { data: user, error: loginError } = await supabase
             .from("users")
             .select("*")
@@ -86,11 +105,12 @@ document.getElementById("submitButton").addEventListener("click", async () => {
             .eq("password", password)
             .single();
 
-        if (loginError || !user) {
+        if (!user || loginError) {
             document.getElementById("error-message").textContent = "Usuario o contraseña incorrectos.";
             return;
         }
 
+        // Guardar sesión
         localStorage.setItem("currentUser", JSON.stringify(user));
         alert("Inicio de sesión exitoso");
         window.location.href = "PaginaPrincipal.html";
