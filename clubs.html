@@ -1,184 +1,242 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Chats</title>
-    <script src="https://unpkg.com/@supabase/supabase-js"></script>
-    <style>
-        body {
-            margin: 0; padding: 0;
-            font-family: Arial, sans-serif;
-            display: flex; height: 100vh;
-            background: #111; color: white;
-        }
-        .sidebar {
-            width: 25%;
-            background: rgba(0,0,0,0.8);
-            padding: 20px;
-            overflow-y: auto;
-        }
-        .chat-section {
-            width: 75%;
-            display: flex; flex-direction: column;
-            background: rgba(20,20,20,0.9);
-        }
-        .chat-messages {
-            flex-grow: 1;
-            padding: 20px;
-            overflow-y: auto;
-            border-bottom: 1px solid #444;
-        }
-        .chat-input {
-            display: flex; padding: 10px 20px;
-            border-top: 1px solid #444;
-        }
-        .chat-input input {
-            flex-grow: 1; padding: 10px;
-            border: none; border-radius: 5px;
-            margin-right: 10px;
-        }
-        .chat-input button {
-            padding: 10px 20px;
-            border: none; border-radius: 5px;
-            background: #008CBA; color: white;
-            cursor: pointer;
-        }
-        ul { list-style: none; padding: 0; }
-        li { padding: 10px; cursor: pointer; border-bottom: 1px solid #444; }
-        li:hover { background: #222; }
-        .members-list { margin-top: 20px; }
-        .creator { color: #FFD700; font-weight: bold; }
-        .back-button {
-            display: block; margin-bottom: 20px;
-            padding: 10px 20px; background: #ff5733; color: white;
-            border: none; border-radius: 5px; cursor: pointer;
-        }
-        .back-button:hover { background: #e04e2b; }
-    </style>
+  <meta charset="utf-8" />
+  <title>Chats (Supabase) - Corregido</title>
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+  <style>
+    body{margin:0;padding:0;font-family:Arial, sans-serif;display:flex;height:100vh;background:#111;color:#fff}
+    .sidebar{width:25%;background:rgba(0,0,0,0.85);padding:18px;overflow-y:auto}
+    .chat-section{width:75%;display:flex;flex-direction:column;background:rgba(20,20,20,0.95)}
+    .chat-messages{flex:1;padding:18px;overflow:auto;border-bottom:1px solid #333}
+    .chat-input{display:flex;padding:12px}
+    .chat-input input{flex:1;padding:10px;border-radius:6px;border:none;margin-right:8px;background:#222;color:#fff}
+    .chat-input button{padding:10px 14px;border-radius:6px;border:none;background:#0aa;color:#fff;cursor:pointer}
+    ul{list-style:none;padding:0;margin:0}
+    li{padding:10px;border-bottom:1px solid #222;cursor:pointer}
+    li:hover{background:#222}
+    .creator{color:#FFD700;font-weight:700}
+    .back-button{display:block;margin-bottom:12px;padding:8px 12px;background:#ff5733;border:none;border-radius:6px;color:#fff;cursor:pointer}
+  </style>
 </head>
 <body>
-    <div class="sidebar">
-        <button class="back-button" onclick="window.location.href='PaginaPrincipal.html'">Volver a Inicio</button>
+  <div class="sidebar">
+    <button class="back-button" onclick="window.location.href='PaginaPrincipal.html'">Volver a Inicio</button>
 
-        <h2>Chats</h2>
-        <button onclick="crearChat()">Crear Chat</button>
-        <ul id="chat-list"></ul>
+    <h2>Chats</h2>
+    <button onclick="crearChat()">Crear Chat</button>
+    <ul id="chat-list"></ul>
 
-        <div class="members-list">
-            <h3>Miembros</h3>
-            <ul id="members-list"></ul>
-        </div>
+    <div style="margin-top:18px">
+      <h3>Miembros</h3>
+      <ul id="members-list"></ul>
+    </div>
+  </div>
+
+  <div class="chat-section">
+    <div class="chat-messages" id="chat-messages">
+      <p>Selecciona un chat para ver los mensajes...</p>
     </div>
 
-    <div class="chat-section">
-        <div class="chat-messages" id="chat-messages">
-            <p>Selecciona un chat para ver los mensajes...</p>
-        </div>
-        <div class="chat-input">
-            <input type="text" id="message-input" placeholder="Escribe un mensaje..." />
-            <button onclick="enviarMensaje()">Enviar</button>
-        </div>
+    <div class="chat-input">
+      <input id="message-input" placeholder="Escribe un mensaje..." />
+      <button onclick="enviarMensaje()">Enviar</button>
     </div>
+  </div>
 
 <script>
-    // --- CONFIGURACIÓN SUPABASE ---
-    const SUPABASE_URL = "https://jdvwlfogkzrzovepzjqa.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkdndsZm9na3pyem92ZXB6anFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzY1MjEsImV4cCI6MjA3MzYxMjUyMX0.IwVFrvuluY0tfgE82XnqYSsRjFPsDYnlfyirHjKu1TI";
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+/* =========  CONFIGURA ESTO  =========
+   Pon aquí tu URL y ANON KEY (Settings → API en Supabase)
+   Nunca uses service_role key en el frontend.
+*/
+const SUPABASE_URL = "https://jdvwlfogkzrzovepzjqa.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkdndsZm9na3pyem92ZXB6anFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzY1MjEsImV4cCI6MjA3MzYxMjUyMX0.IwVFrvuluY0tfgE82XnqYSsRjFPsDYnlfyirHjKu1TI";
 
-    let usuario = { username: "Usuario" + Math.floor(Math.random()*1000) }; // usuario temporal
-    let chatActual = null;
+/* Inicializar cliente Supabase: usamos 'db' como cliente y lo usamos en todo el código */
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // --- CARGAR CHATS ---
-    async function cargarChats() {
-    const { data: chats, error } = await db.from("chats").select("*").order('created_at', { ascending: true });
-    if (error) {
-        console.log("Error cargando chats:", error.message);
-        return;
+/* Usuario (para pruebas). Si usas login, carga desde localStorage o desde auth */
+let usuario = JSON.parse(localStorage.getItem("currentUser")) || { username: "User" + Math.floor(Math.random()*1000) };
+
+/* Estado */
+let chatActual = null; // objeto chat completo cuando está abierto
+
+/* ---------- Inicializar ---------- */
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("Usuario:", usuario);
+  cargarChats();
+});
+
+/* ---------- Cargar lista de chats ---------- */
+async function cargarChats() {
+  try {
+    const { data: chats, error } = await db
+      .from("chats")
+      .select("*")
+      .order("created_at", { ascending: true });
+
+    if (error) throw error;
+
+    const ul = document.getElementById("chat-list");
+    ul.innerHTML = "";
+
+    // Si no hay chats, mostrar texto
+    if (!chats || chats.length === 0) {
+      const li = document.createElement("li");
+      li.textContent = "No hay chats. Crea uno.";
+      li.style.cursor = "default";
+      ul.appendChild(li);
+      return;
     }
-
-    const lista = document.getElementById("chat-list");
-    lista.innerHTML = "";
 
     chats.forEach(chat => {
-        const li = document.createElement("li");
-        li.textContent = chat.nombre;
-        li.style.cursor = "pointer";
-        li.onclick = () => abrirChat(chat.id); // abrir chat al hacer click
-        lista.appendChild(li);
+      const li = document.createElement("li");
+      li.textContent = chat.nombre;
+      li.onclick = () => abrirChat(chat.id); // pasamos id (no el objeto)
+      ul.appendChild(li);
     });
+  } catch (err) {
+    console.error("cargarChats error:", err);
+    alert("Error cargando chats. Mira la consola (F12).");
+  }
 }
 
+/* ---------- Crear chat ---------- */
+async function crearChat() {
+  const nombre = prompt("Nombre del chat:");
+  if (!nombre) return;
 
-    async function crearChat() {
-    const nombre = prompt("Introduce el nombre del chat:");
-    if (!nombre) return;
+  // asegurar usuario válido
+  if (!usuario || !usuario.username) {
+    alert("No hay usuario. Guarda currentUser en localStorage o inicia sesión.");
+    return;
+  }
 
-    const { data, error } = await db.from("chats").insert([{
-        nombre: nombre,
+  try {
+    const { data, error } = await db
+      .from("chats")
+      .insert([{
+        nombre,
         creador: usuario.username,
-        miembros: [usuario.username] // esto ahora sí funciona
-    }]).select().single(); // select() para que devuelva los datos recién insertados
+        miembros: [usuario.username] // array -> text[] en PG
+      }])
+      .select() // pedimos que devuelva lo insertado
+      .single();
 
-    if (error) {
-        alert("Error al crear chat: " + error.message);
-        return;
-    }
+    if (error) throw error;
 
-    cargarChats(); // recarga la lista de chats
-    abrirChat(data.id); // abre el chat recién creado
+    // recargar lista y abrir el chat recién creado
+    await cargarChats();
+    abrirChat(data.id);
+  } catch (err) {
+    console.error("crearChat error:", err);
+    alert("Error al crear chat: " + (err.message || err));
+  }
 }
 
-    // --- ABRIR CHAT ---
-    async function abrirChat(chat) {
-        chatActual = chat;
+/* ---------- Abrir chat (recupera el chat desde DB) ---------- */
+async function abrirChat(chatId) {
+  try {
+    // obtener chat actualizado
+    const { data: chatData, error: chatErr } = await db
+      .from("chats")
+      .select("*")
+      .eq("id", chatId)
+      .single();
 
-        // Cargar miembros
-        const membersUl = document.getElementById("members-list");
-        membersUl.innerHTML = "";
-        chat.miembros.forEach(m => {
-            const li = document.createElement("li");
-            li.textContent = m;
-            if (m === chat.creador) li.classList.add("creator");
-            membersUl.appendChild(li);
-        });
+    if (chatErr) throw chatErr;
 
-        // Cargar mensajes
-        const { data: mensajes, error } = await supabase
-            .from("chat_messages")
-            .select("*")
-            .eq("chat_id", chat.id)
-            .order("created_at", { ascending: true });
+    chatActual = chatData; // guardamos el objeto completo
 
-        const messagesDiv = document.getElementById("chat-messages");
-        messagesDiv.innerHTML = "";
-        if (error) { console.error(error); return; }
-
-        mensajes.forEach(m => {
-            const p = document.createElement("p");
-            p.textContent = `${m.author}: ${m.message}`;
-            messagesDiv.appendChild(p);
-        });
+    // mostrar miembros
+    const membersUl = document.getElementById("members-list");
+    membersUl.innerHTML = "";
+    const miembros = Array.isArray(chatData.miembros) ? chatData.miembros : [];
+    if (miembros.length === 0) {
+      const li = document.createElement("li");
+      li.textContent = "(sin miembros)";
+      membersUl.appendChild(li);
+    } else {
+      miembros.forEach(m => {
+        const li = document.createElement("li");
+        li.textContent = m;
+        if (m === chatData.creador) li.classList.add("creator");
+        membersUl.appendChild(li);
+      });
     }
 
-    // --- ENVIAR MENSAJE ---
-    async function enviarMensaje() {
-        const input = document.getElementById("message-input");
-        const texto = input.value.trim();
-        if (!texto || !chatActual) return;
+    // cargar mensajes
+    await cargarMensajes(chatData.id);
 
-        const { error } = await supabase
-            .from("chat_messages")
-            .insert([{ chat_id: chatActual.id, author: usuario.username, message: texto }]);
+  } catch (err) {
+    console.error("abrirChat error:", err);
+    alert("Error abriendo chat. Mira la consola.");
+  }
+}
 
-        if (error) { alert("Error al enviar mensaje: " + error.message); return; }
+/* ---------- Cargar mensajes para un chat ---------- */
+async function cargarMensajes(chatId) {
+  try {
+    const { data: mensajes, error } = await db
+      .from("chat_messages")
+      .select("*")
+      .eq("chat_id", chatId)
+      .order("created_at", { ascending: true });
 
-        input.value = "";
-        abrirChat(chatActual); // Recargar mensajes
+    if (error) throw error;
+
+    const container = document.getElementById("chat-messages");
+    container.innerHTML = "";
+
+    if (!mensajes || mensajes.length === 0) {
+      container.innerHTML = "<p>No hay mensajes (escribe el primero).</p>";
+      return;
     }
 
-    // --- INICIALIZAR ---
-    cargarChats();
+    mensajes.forEach(m => {
+      const p = document.createElement("p");
+      const time = new Date(m.created_at).toLocaleString();
+      p.textContent = `${m.author} — ${time}: ${m.message}`;
+      container.appendChild(p);
+    });
+
+    container.scrollTop = container.scrollHeight;
+  } catch (err) {
+    console.error("cargarMensajes error:", err);
+    alert("Error cargando mensajes. Revisa la consola.");
+  }
+}
+
+/* ---------- Enviar mensaje ---------- */
+async function enviarMensaje() {
+  const input = document.getElementById("message-input");
+  const texto = input.value.trim();
+  if (!texto) return;
+  if (!chatActual || !chatActual.id) {
+    alert("Selecciona un chat antes de enviar un mensaje.");
+    return;
+  }
+
+  try {
+    const { error } = await db
+      .from("chat_messages")
+      .insert([{
+        chat_id: chatActual.id,
+        author: usuario.username,
+        message: texto
+      }]);
+
+    if (error) throw error;
+
+    input.value = "";
+    // recargamos solo los mensajes (más eficiente que recargar toda la lista)
+    await cargarMensajes(chatActual.id);
+  } catch (err) {
+    console.error("enviarMensaje error:", err);
+    alert("Error al enviar mensaje: " + (err.message || err));
+  }
+}
 </script>
 </body>
 </html>
