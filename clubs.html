@@ -120,6 +120,7 @@ async function crearChat() {
 }
 
 /* ---------- Abrir chat ---------- */
+/* ---------- Abrir chat ---------- */
 async function abrirChat(chatId) {
   // Obtener chat
   const { data: chatData, error } = await db
@@ -139,34 +140,49 @@ async function abrirChat(chatId) {
       .update({ miembros: nuevosMiembros })
       .eq("id", chatId);
 
-    if (updateError) {
-      mostrarError("Error actualizando miembros: " + updateError.message);
-    } else {
-      chatData.miembros = nuevosMiembros; // actualizar localmente
-    }
+    if (updateError) mostrarError("Error actualizando miembros: " + updateError.message);
+    else chatData.miembros = nuevosMiembros; // actualizar localmente
   }
 
   chatActual = chatData;
 
-  // Mostrar miembros
-  const membersUl = document.getElementById("members-list");
-  membersUl.innerHTML = "";
-  chatData.miembros.forEach(m => {
-    const li = document.createElement("li");
-    li.textContent = m;
-    if (m === chatData.creador) li.classList.add("creator");
-    membersUl.appendChild(li);
-  });
+  // --- Función para refrescar miembros ---
+  async function refrescarMiembros() {
+    const { data: updatedChat, error } = await db
+      .from("chats")
+      .select("miembros, creador")
+      .eq("id", chatId)
+      .single();
 
-  // Cargar mensajes inicialmente
-  await cargarMensajes(chatData.id);
+    if (error) { mostrarError("Error actualizando miembros: " + error.message); return; }
 
-  // --- Configurar recarga automática ---
-  if (window.mensajeIntervalo) clearInterval(window.mensajeIntervalo); // limpiar interval anterior
+    const membersUl = document.getElementById("members-list");
+    membersUl.innerHTML = "";
+    const currentMembers = Array.isArray(updatedChat.miembros) ? updatedChat.miembros : [];
+    currentMembers.forEach(m => {
+      const li = document.createElement("li");
+      li.textContent = m;
+      if (m === updatedChat.creador) li.classList.add("creator");
+      membersUl.appendChild(li);
+    });
+  }
+
+  // Mostrar miembros inicialmente
+  refrescarMiembros();
+
+  // --- Configurar recarga automática cada 2 segundos ---
+  if (window.mensajeIntervalo) clearInterval(window.mensajeIntervalo); 
+  if (window.miembrosIntervalo) clearInterval(window.miembrosIntervalo);
+
   window.mensajeIntervalo = setInterval(() => {
     if (chatActual && chatActual.id) cargarMensajes(chatActual.id);
-  }, 2000); // cada 2 segundos
+  }, 2000);
+
+  window.miembrosIntervalo = setInterval(() => {
+    refrescarMiembros();
+  }, 2000);
 }
+
 /* ---------- Cargar mensajes ---------- */
 async function cargarMensajes(chatId) {
   const { data: mensajes, error } = await db
