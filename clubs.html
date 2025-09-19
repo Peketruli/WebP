@@ -43,6 +43,8 @@
       <button onclick="enviarMensaje()">Enviar</button>
     </div>
   </div>
+   
+  <div id="error-log" style="color: red; font-size: 14px; margin: 10px;"></div>
 
 <script>
 /* =========  CONFIGURA ESTO  =========
@@ -70,37 +72,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
 /* ---------- Cargar lista de chats ---------- */
 async function cargarChats() {
-  try {
-    const { data: chats, error } = await db
-      .from("chats")
-      .select("*")
-      .order("created_at", { ascending: true });
+    const { data: chats, error } = await supabase
+        .from("chats")
+        .select("*")
+        .order('created_at', { ascending: true });
 
-    if (error) throw error;
-
-    const ul = document.getElementById("chat-list");
-    ul.innerHTML = "";
-
-    // Si no hay chats, mostrar texto
-    if (!chats || chats.length === 0) {
-      const li = document.createElement("li");
-      li.textContent = "No hay chats. Crea uno.";
-      li.style.cursor = "default";
-      ul.appendChild(li);
-      return;
+    if (error) {
+        mostrarError("Error cargando chats: " + error.message);
+        return;
     }
 
+    const lista = document.getElementById("chat-list");
+    lista.innerHTML = "";
+
     chats.forEach(chat => {
-      const li = document.createElement("li");
-      li.textContent = chat.nombre;
-      li.onclick = () => abrirChat(chat.id); // pasamos id (no el objeto)
-      ul.appendChild(li);
+        const li = document.createElement("li");
+        li.textContent = chat.nombre;
+        li.style.cursor = "pointer";
+        li.onclick = () => abrirChat(chat.id); // abrir chat al hacer click
+        lista.appendChild(li);
     });
-  } catch (err) {
-    console.error("cargarChats error:", err);
-    alert("Error cargando chats. Mira la consola (F12).");
-  }
 }
+
 
 /* ---------- Crear chat ---------- */
 async function crearChat() {
@@ -237,6 +230,12 @@ async function enviarMensaje() {
     alert("Error al enviar mensaje: " + (err.message || err));
   }
 }
+
+  function mostrarError(mensaje) {
+    const errorDiv = document.getElementById("error-log");
+    errorDiv.innerText = mensaje;
+}
+
 </script>
 </body>
 </html>
