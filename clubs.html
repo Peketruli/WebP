@@ -176,11 +176,11 @@ async function abrirChat(chatId) {
 
   window.mensajeIntervalo = setInterval(() => {
     if (chatActual && chatActual.id) cargarMensajes(chatActual.id);
-  }, 2000);
+  }, 500);
 
   window.miembrosIntervalo = setInterval(() => {
     refrescarMiembros();
-  }, 2000);
+  }, 500);
 }
 
 /* ---------- Cargar mensajes ---------- */
