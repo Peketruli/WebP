@@ -69,39 +69,32 @@ document.addEventListener("DOMContentLoaded", () => {
   cargarChats();
 });
 
-async function abrirChat(chatId) {
-    // Obtener chat
-    const { data: chatData, error } = await db.from("chats").select("*").eq("id", chatId).single();
-    if (error) { mostrarError("Error abriendo chat: " + error.message); return; }
+/* ---------- Cargar lista de chats ---------- */
+async function cargarChats() {
+  const { data: chats, error } = await db
+    .from("chats")
+    .select("*")
+    .order("created_at", { ascending: true });
 
-    // Si el usuario no está en miembros, agregarlo
-    if (!chatData.miembros.includes(usuario.username)) {
-        const nuevosMiembros = [...chatData.miembros, usuario.username];
-        await db.from("chats").update({ miembros: nuevosMiembros }).eq("id", chatId);
-        chatData.miembros = nuevosMiembros; // actualizar localmente
-    }
+  if (error) { mostrarError("Error cargando chats: " + error.message); return; }
 
-    chatActual = chatData;
+  const ul = document.getElementById("chat-list");
+  ul.innerHTML = "";
 
-    // --- Mostrar miembros ---
-    const membersUl = document.getElementById("members-list");
-    membersUl.innerHTML = "";
-    const miembros = Array.isArray(chatData.miembros) ? chatData.miembros : [];
-    if (miembros.length === 0) {
-        const li = document.createElement("li");
-        li.textContent = "(sin miembros)";
-        membersUl.appendChild(li);
-    } else {
-        miembros.forEach(m => {
-            const li = document.createElement("li");
-            li.textContent = m;
-            if (m === chatData.creador) li.classList.add("creator");
-            membersUl.appendChild(li);
-        });
-    }
+  if (!chats || chats.length === 0) {
+    const li = document.createElement("li");
+    li.textContent = "No hay chats. Crea uno.";
+    li.style.cursor = "default";
+    ul.appendChild(li);
+    return;
+  }
 
-    // --- Cargar mensajes ---
-    await cargarMensajes(chatData.id);
+  chats.forEach(chat => {
+    const li = document.createElement("li");
+    li.textContent = chat.nombre;
+    li.onclick = () => abrirChat(chat.id);
+    ul.appendChild(li);
+  });
 }
 
 /* ---------- Crear chat ---------- */
@@ -126,20 +119,35 @@ async function crearChat() {
   abrirChat(data.id);
 }
 
+/* ---------- Abrir chat ---------- */
 async function abrirChat(chatId) {
-    // Obtener chat
-    const { data: chatData, error } = await db.from("chats").select("*").eq("id", chatId).single();
-    if (error) { alert("Error abriendo chat"); return; }
+  const { data: chatData, error } = await db
+    .from("chats")
+    .select("*")
+    .eq("id", chatId)
+    .single();
 
-    // Si el usuario no está en miembros, agregarlo
-    if (!chatData.miembros.includes(usuario.username)) {
-        const nuevosMiembros = [...chatData.miembros, usuario.username];
-        await db.from("chats").update({ miembros: nuevosMiembros }).eq("id", chatId);
-        chatData.miembros = nuevosMiembros; // actualizar localmente
-    }
+  if (error) { mostrarError("Error abriendo chat: " + error.message); return; }
 
-    chatActual = chatData;
-    // Mostrar miembros y cargar mensajes como antes...
+  chatActual = chatData;
+
+  const membersUl = document.getElementById("members-list");
+  membersUl.innerHTML = "";
+  const miembros = Array.isArray(chatData.miembros) ? chatData.miembros : [];
+  if (miembros.length === 0) {
+    const li = document.createElement("li");
+    li.textContent = "(sin miembros)";
+    membersUl.appendChild(li);
+  } else {
+    miembros.forEach(m => {
+      const li = document.createElement("li");
+      li.textContent = m;
+      if (m === chatData.creador) li.classList.add("creator");
+      membersUl.appendChild(li);
+    });
+  }
+
+  await cargarMensajes(chatData.id);
 }
 
 /* ---------- Cargar mensajes ---------- */
