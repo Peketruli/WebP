@@ -77,11 +77,6 @@ async function cargarChats() {
         .select("*")
         .order('created_at', { ascending: true });
 
-    if (error) {
-        mostrarError("Error cargando chats: " + error.message);
-        return;
-    }
-
     const lista = document.getElementById("chat-list");
     lista.innerHTML = "";
 
@@ -229,11 +224,6 @@ async function enviarMensaje() {
     console.error("enviarMensaje error:", err);
     alert("Error al enviar mensaje: " + (err.message || err));
   }
-}
-
-  function mostrarError(mensaje) {
-    const errorDiv = document.getElementById("error-log");
-    errorDiv.innerText = mensaje;
 }
 
 </script>
