@@ -42,6 +42,13 @@
       cursor: pointer;
       color: #007bff;
     }
+    .back-btn {
+      margin-top: 1rem;
+      background: #007bff;
+    }
+    .back-btn:hover {
+      background: #0066cc;
+    }
   </style>
 </head>
 <body>
@@ -53,6 +60,7 @@
       <button type="submit" id="submitBtn">Entrar</button>
     </form>
     <div class="toggle" id="toggleForm">¿No tienes cuenta? Regístrate</div>
+    <button class="back-btn" onclick="window.location.href='index.html'">Volver a la página principal</button>
   </div>
 
   <script>
@@ -92,7 +100,7 @@
         } else {
           alert("Bienvenido " + data.username + " ✅");
           localStorage.setItem("user", JSON.stringify(data));
-          // window.location.href = "perfil.html";
+          window.location.href = "index.html"; // 🔹 Redirigir a página principal
         }
       } else {
         // REGISTRO
@@ -114,4 +122,3 @@
   </script>
 </body>
 </html>
-
