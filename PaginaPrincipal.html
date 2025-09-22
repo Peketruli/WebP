@@ -208,7 +208,7 @@
 
     
     function loadUserInfo() {
-        const user = JSON.parse(localStorage.getItem("currentUser"));
+        localStorage.setItem("currentUser", JSON.stringify(data));
         const authContainer = document.getElementById("authContainer");
         const userInfo = document.getElementById("userInfo");
 
