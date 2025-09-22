@@ -141,7 +141,7 @@
         if (error || !data) {
           alert("Usuario o contraseña incorrectos ❌");
         } else {
-         localStorage.setItem("currentUser", JSON.stringify(data));
+             const user = JSON.parse(localStorage.getItem("currentUser"));
           alert("Bienvenido " + data.username + " ✅");
           checkLoggedUser();
         }
