@@ -59,9 +59,10 @@
     // Inicializar Supabase
     const SUPABASE_URL = "https://jdvwlfogkzrzovepzjqa.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkdndsZm9na3pyem92ZXB6anFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzY1MjEsImV4cCI6MjA3MzYxMjUyMX0.IwVFrvuluY0tfgE82XnqYSsRjFPsDYnlfyirHjKu1TI";
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const { createClient } = window.supabase;
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    let isLogin = true; // Alterna entre login y registro
+    let isLogin = true;
 
     document.getElementById("toggleForm").addEventListener("click", () => {
       isLogin = !isLogin;
@@ -74,8 +75,8 @@
 
     document.getElementById("authForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
 
       if (isLogin) {
         // LOGIN
@@ -90,8 +91,7 @@
           alert("Usuario o contraseña incorrectos ❌");
         } else {
           alert("Bienvenido " + data.username + " ✅");
-          // Aquí podrías guardar en localStorage y redirigir al perfil
-          // localStorage.setItem("user", JSON.stringify(data));
+          localStorage.setItem("user", JSON.stringify(data));
           // window.location.href = "perfil.html";
         }
       } else {
@@ -103,7 +103,7 @@
         if (error) {
           alert("Error al registrarse: " + error.message);
         } else {
-          alert("Usuario creado con éxito 🎉");
+          alert("Usuario creado con éxito 🎉 Ahora inicia sesión.");
           isLogin = true;
           document.getElementById("form-title").innerText = "Login";
           document.getElementById("submitBtn").innerText = "Entrar";
@@ -114,3 +114,4 @@
   </script>
 </body>
 </html>
+
