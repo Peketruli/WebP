@@ -15,7 +15,6 @@
       height: 100vh;
       margin: 0;
     }
-    /* Botón principal */
     .main-btn {
       background: #2196F3;
       color: white;
@@ -24,7 +23,7 @@
       border-radius: 8px;
       cursor: pointer;
       font-size: 1rem;
-      margin-bottom: 20px; /* espacio debajo */
+      margin-bottom: 20px;
     }
     .main-btn:hover {
       background: #1976D2;
@@ -58,10 +57,16 @@
       cursor: pointer;
       color: #007bff;
     }
+    .logout-btn {
+      background: #f44336;
+      margin-top: 10px;
+    }
+    .logout-btn:hover {
+      background: #d32f2f;
+    }
   </style>
 </head>
 <body>
-  <!-- Botón arriba centrado -->
   <button class="main-btn" onclick="window.location.href='PaginaPrincipal.html'">🏠 Volver a la Página Principal</button>
 
   <div class="container">
@@ -72,6 +77,8 @@
       <button type="submit" id="submitBtn">Entrar</button>
     </form>
     <div class="toggle" id="toggleForm">¿No tienes cuenta? Regístrate</div>
+    <button id="logoutBtn" class="logout-btn" style="display:none;">Cerrar sesión</button>
+    <p id="welcomeText"></p>
   </div>
 
   <script>
@@ -83,16 +90,41 @@
 
     let isLogin = true;
 
-    document.getElementById("toggleForm").addEventListener("click", () => {
+    const authForm = document.getElementById("authForm");
+    const toggleForm = document.getElementById("toggleForm");
+    const submitBtn = document.getElementById("submitBtn");
+    const formTitle = document.getElementById("form-title");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const welcomeText = document.getElementById("welcomeText");
+
+    // Revisar si ya hay un usuario en localStorage
+    function checkLoggedUser() {
+      const user = JSON.parse(localStorage.getItem("user"));
+      if(user) {
+        authForm.style.display = "none";
+        toggleForm.style.display = "none";
+        logoutBtn.style.display = "block";
+        welcomeText.innerText = `Bienvenido, ${user.username}!`;
+      } else {
+        authForm.style.display = "block";
+        toggleForm.style.display = "block";
+        logoutBtn.style.display = "none";
+        welcomeText.innerText = "";
+      }
+    }
+
+    checkLoggedUser();
+
+    toggleForm.addEventListener("click", () => {
       isLogin = !isLogin;
-      document.getElementById("form-title").innerText = isLogin ? "Login" : "Registro";
-      document.getElementById("submitBtn").innerText = isLogin ? "Entrar" : "Crear cuenta";
-      document.getElementById("toggleForm").innerText = isLogin
+      formTitle.innerText = isLogin ? "Login" : "Registro";
+      submitBtn.innerText = isLogin ? "Entrar" : "Crear cuenta";
+      toggleForm.innerText = isLogin
         ? "¿No tienes cuenta? Regístrate"
         : "¿Ya tienes cuenta? Inicia sesión";
     });
 
-    document.getElementById("authForm").addEventListener("submit", async (e) => {
+    authForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const username = document.getElementById("username").value.trim();
       const password = document.getElementById("password").value.trim();
@@ -109,8 +141,9 @@
         if (error || !data) {
           alert("Usuario o contraseña incorrectos ❌");
         } else {
+          localStorage.setItem("user", JSON.stringify(data)); // 🔹 Guardar en localStorage
           alert("Bienvenido " + data.username + " ✅");
-          window.location.href = "PaginaPrincipal.html"; // 🔹 Redirigir al inicio
+          checkLoggedUser();
         }
       } else {
         // REGISTRO
@@ -123,11 +156,17 @@
         } else {
           alert("Usuario creado con éxito 🎉 Ahora inicia sesión.");
           isLogin = true;
-          document.getElementById("form-title").innerText = "Login";
-          document.getElementById("submitBtn").innerText = "Entrar";
-          document.getElementById("toggleForm").innerText = "¿No tienes cuenta? Regístrate";
+          formTitle.innerText = "Login";
+          submitBtn.innerText = "Entrar";
+          toggleForm.innerText = "¿No tienes cuenta? Regístrate";
         }
       }
+    });
+
+    // Cerrar sesión
+    logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("user"); // 🔹 Eliminar usuario
+      checkLoggedUser();
     });
   </script>
 </body>
