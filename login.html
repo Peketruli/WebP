@@ -1,121 +1,116 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8">
-<title>Login / Registro</title>
-<script src="https://unpkg.com/@supabase/supabase-js"></script>
-<style>
-body {
-    font-family: Arial; 
-    text-align:center; 
-    padding:50px; 
-    background: linear-gradient(45deg,#FF5733,#FFC300,#FF5733); 
-    color:white;
-}
-.container { 
-    background:white; 
-    padding:20px; 
-    border-radius:10px; 
-    display:inline-block; 
-    color:black; 
-}
-input, button { 
-    display:block; 
-    margin:10px auto; 
-    padding:10px; 
-    width:80%; 
-}
-#error-message { 
-    color:red; 
-    font-size:0.9em; 
-}
-</style>
+  <meta charset="UTF-8">
+  <title>Login / Registro</title>
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f3f3;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      width: 300px;
+      text-align: center;
+    }
+    input, button {
+      width: 100%;
+      padding: 0.7rem;
+      margin: 0.5rem 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    button {
+      background: #4CAF50;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    .toggle {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+      color: #007bff;
+    }
+  </style>
 </head>
 <body>
-<div class="container">
-    <h2 id="formTitle">Iniciar Sesión</h2>
-    <input type="text" id="username" placeholder="Nombre de usuario">
-    <input type="password" id="password" placeholder="Contraseña">
+  <div class="container">
+    <h2 id="form-title">Login</h2>
+    <form id="authForm">
+      <input type="text" id="username" placeholder="Usuario" required>
+      <input type="password" id="password" placeholder="Contraseña" required>
+      <button type="submit" id="submitBtn">Entrar</button>
+    </form>
+    <div class="toggle" id="toggleForm">¿No tienes cuenta? Regístrate</div>
+  </div>
 
-    <button id="toggleRegister">Registrarse</button>
-    <button id="submitButton">Iniciar Sesión</button>
+  <script>
+    // Inicializar Supabase
+    const SUPABASE_URL = "https://jdvwlfogkzrzovepzjqa.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkdndsZm9na3pyem92ZXB6anFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzY1MjEsImV4cCI6MjA3MzYxMjUyMX0.IwVFrvuluY0tfgE82XnqYSsRjFPsDYnlfyirHjKu1TI";
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    <div id="error-message"></div>
-</div>
+    let isLogin = true; // Alterna entre login y registro
 
-<script>
-const SUPABASE_URL = "https://jdvwlfogkzrzovepzjqa.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkdndsZm9na3pyem92ZXB6anFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzY1MjEsImV4cCI6MjA3MzYxMjUyMX0.IwVFrvuluY0tfgE82XnqYSsRjFPsDYnlfyirHjKu1TI";
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    document.getElementById("toggleForm").addEventListener("click", () => {
+      isLogin = !isLogin;
+      document.getElementById("form-title").innerText = isLogin ? "Login" : "Registro";
+      document.getElementById("submitBtn").innerText = isLogin ? "Entrar" : "Crear cuenta";
+      document.getElementById("toggleForm").innerText = isLogin
+        ? "¿No tienes cuenta? Regístrate"
+        : "¿Ya tienes cuenta? Inicia sesión";
+    });
 
-let isRegistering = false;
+    document.getElementById("authForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
 
-// Alternar registro/login
-document.getElementById("toggleRegister").addEventListener("click", () => {
-    isRegistering = !isRegistering;
-    document.getElementById("formTitle").textContent = isRegistering ? "Registrarse" : "Iniciar Sesión";
-    document.getElementById("submitButton").textContent = isRegistering ? "Registrar" : "Iniciar Sesión";
-    document.getElementById("error-message").textContent = '';
-});
+      if (isLogin) {
+        // LOGIN
+        const { data, error } = await supabase
+          .from("usuarios")
+          .select("*")
+          .eq("username", username)
+          .eq("password", password)
+          .single();
 
-// Registrar / iniciar sesión
-document.getElementById("submitButton").addEventListener("click", async () => {
-    const username = document.getElementById("username").value.trim();
-    const password = document.getElementById("password").value.trim();
-
-    if (!username || !password) { 
-        document.getElementById("error-message").textContent = "Completa todos los campos."; 
-        return; 
-    }
-
-    if (isRegistering) {
-        // Verificar si username ya existe
-        const { data: existingUser, error: selectError } = await supabase
-            .from("users")
-            .select("id")
-            .eq("username", username)
-            .single();
-
-        if (existingUser) {
-            document.getElementById("error-message").textContent = "El nombre de usuario ya existe.";
-            return;
+        if (error || !data) {
+          alert("Usuario o contraseña incorrectos ❌");
+        } else {
+          alert("Bienvenido " + data.username + " ✅");
+          // Aquí podrías guardar en localStorage y redirigir al perfil
+          // localStorage.setItem("user", JSON.stringify(data));
+          // window.location.href = "perfil.html";
         }
+      } else {
+        // REGISTRO
+        const { data, error } = await supabase
+          .from("usuarios")
+          .insert([{ username, password }]);
 
-        // Insertar nuevo usuario
-        const { data, error: insertError } = await supabase
-            .from("users")
-            .insert([{ username, password }]);
-
-        if (insertError) {
-            document.getElementById("error-message").textContent = insertError.message;
-            return;
+        if (error) {
+          alert("Error al registrarse: " + error.message);
+        } else {
+          alert("Usuario creado con éxito 🎉");
+          isLogin = true;
+          document.getElementById("form-title").innerText = "Login";
+          document.getElementById("submitBtn").innerText = "Entrar";
+          document.getElementById("toggleForm").innerText = "¿No tienes cuenta? Regístrate";
         }
-
-        alert("Registro exitoso. Ya puedes iniciar sesión.");
-        isRegistering = false;
-        document.getElementById("formTitle").textContent = "Iniciar Sesión";
-        document.getElementById("submitButton").textContent = "Iniciar Sesión";
-        document.getElementById("error-message").textContent = '';
-    } else {
-        // Iniciar sesión
-        const { data: user, error: loginError } = await supabase
-            .from("users")
-            .select("*")
-            .eq("username", username)
-            .eq("password", password)
-            .single();
-
-        if (!user || loginError) {
-            document.getElementById("error-message").textContent = "Usuario o contraseña incorrectos.";
-            return;
-        }
-
-        // Guardar sesión
-        localStorage.setItem("currentUser", JSON.stringify(user));
-        alert("Inicio de sesión exitoso");
-        window.location.href = "PaginaPrincipal.html";
-    }
-});
-</script>
+      }
+    });
+  </script>
 </body>
 </html>
