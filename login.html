@@ -103,22 +103,44 @@
           window.location.href = "index.html"; // 🔹 Redirigir a página principal
         }
       } else {
-        // REGISTRO
-        const { data, error } = await supabase
-          .from("usuarios")
-          .insert([{ username, password }]);
-
-        if (error) {
-          alert("Error al registrarse: " + error.message);
         } else {
-          alert("Usuario creado con éxito 🎉 Ahora inicia sesión.");
-          isLogin = true;
-          document.getElementById("form-title").innerText = "Login";
-          document.getElementById("submitBtn").innerText = "Entrar";
-          document.getElementById("toggleForm").innerText = "¿No tienes cuenta? Regístrate";
-        }
-      }
-    });
+  // REGISTRO
+
+  // 1. Comprobar si el usuario ya existe
+  const { data: existingUser, error: checkError } = await supabase
+    .from("usuarios")
+    .select("id")
+    .eq("username", username)
+    .maybeSingle();
+
+  if (checkError) {
+    alert("Error al comprobar usuario: " + checkError.message);
+    return;
+  }
+
+  if (existingUser) {
+    alert("Ese nombre de usuario ya existe ❌, prueba otro.");
+    return;
+  }
+
+  // 2. Insertar si no existe
+  const { data, error } = await supabase
+    .from("usuarios")
+    .insert([{ username, password }]);
+
+  if (error) {
+    alert("Error al registrarse: " + error.message);
+  } else {
+    alert("Usuario creado con éxito 🎉 Ahora inicia sesión.");
+    isLogin = true;
+    document.getElementById("form-title").innerText = "Login";
+    document.getElementById("submitBtn").innerText = "Entrar";
+    document.getElementById("toggleForm").innerText = "¿No tienes cuenta? Regístrate";
+  }
+}
+
+
+    
   </script>
 </body>
 </html>
