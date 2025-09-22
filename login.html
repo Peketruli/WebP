@@ -45,6 +45,7 @@
   </style>
 </head>
 <body>
+  <button class="btn" onclick="window.location.href='PaginaPrincipal.html'">🏠 Volver a la Página Principal</button>
   <div class="container">
     <h2 id="form-title">Login</h2>
     <form id="authForm">
@@ -91,8 +92,6 @@
           alert("Usuario o contraseña incorrectos ❌");
         } else {
           alert("Bienvenido " + data.username + " ✅");
-          localStorage.setItem("user", JSON.stringify(data));
-          // window.location.href = "perfil.html";
         }
       } else {
         // REGISTRO
