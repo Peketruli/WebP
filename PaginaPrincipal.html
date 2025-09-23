@@ -151,7 +151,10 @@
         </table>
     </div>
 
-    <!-- Botón para descargar PDF de registros -->
+ <div id="clearButtonContainer">
+    <button id="clearLocalStorageButton" onclick="borrarLocalStorage()" style="display:none;">Borrar TODO el localStorage</button>
+</div>
+
     <div id="pdfButtonContainer">
         <button id="downloadButton" onclick="downloadPDF()">Descargar PDF de Registros</button>
     </div>
@@ -218,13 +221,25 @@ function loadUserInfo() {
 
         if (user.username === "Peketruli") {
             document.getElementById("downloadButton").style.display = "block";
+            document.getElementById("downloadButton").style.display = "block";
+            document.getElementById("clearLocalStorageButton").style.display = "block";
         }
     } else {
         userInfo.style.display = "none";
         authContainer.style.display = "flex";
+        ocument.getElementById("clearLocalStorageButton").style.display = "none";
     }
 }
 
+function borrarLocalStorage() {
+    if (confirm("¿Seguro que quieres eliminar TODO el localStorage? Esto cerrará todas las sesiones y borrará todos los datos guardados.")) {
+        localStorage.clear();
+        alert("Se ha eliminado todo el localStorage. Se cerrarán todas las sesiones.");
+        window.location.reload();
+    }
+}
+
+    
 function downloadPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
