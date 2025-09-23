@@ -21,19 +21,16 @@
       100% { background-position: 0% 50%; }
     }
 
-    /* Botones de inicio de sesión / usuario */
     .auth-container, .user-info { position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 10px; }
     .auth-button { padding: 10px 20px; font-size: 1em; color: white; background-color: #333; border: none; cursor: pointer; border-radius: 5px; }
     .user-info { display: none; cursor: pointer; }
     #userLogo { width: 40px; height: 40px; border-radius: 50%; }
     #userName { font-weight: bold; }
 
-    /* Dropdown */
     .dropdown-menu { display: none; position: absolute; top: 60px; right: 20px; background: white; color: black; border-radius: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); width: 150px; text-align: left; }
     .dropdown-menu td { padding: 10px; cursor: pointer; }
     .dropdown-menu td:hover { background-color: #ddd; }
 
-    /* Contenedor de blogs */
     .blog-container { max-width: 800px; margin: auto; padding: 20px; text-align: center; }
     .blog-post, .new-blog, .blog-details { background: white; color: black; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
     .blog-post { cursor: pointer; border: 1px solid #ddd; }
@@ -43,7 +40,6 @@
     .btn { padding: 10px 15px; border: none; border-radius: 8px; background: #e11d48; color: white; cursor: pointer; margin: 5px; }
     .btn:hover { background: #be123c; }
 
-    /* Comentarios */
     #commentsList div { border-bottom: 1px solid #ccc; padding: 5px 0; text-align: left; }
   </style>
 </head>
@@ -96,15 +92,13 @@
   </div>
 
 <script>
-  // Conectar con Supabase
-  const { createClient } = supabase;
   const SUPABASE_URL = "https://jdvwlfogkzrzovepzjqa.supabase.co";
-  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkdndsZm9na3pyem92ZXB6anFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzY1MjEsImV4cCI6MjA3MzYxMjUyMX0.IwVFrvuluY0tfgE82XnqYSsRjFPsDYnlfyirHjKu1TI";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+  const { createClient } = supabase;
   const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  let currentUser = null; // Guardará datos del usuario actual
+  let currentUser = null;
 
-  // 🔹 Cargar usuario actual desde Supabase
   async function loadUserInfo() {
     const { data: { user }, error } = await db.auth.getUser();
     const authContainer = document.getElementById("authContainer");
@@ -117,17 +111,7 @@
       return;
     }
 
-    // Buscar username en tu tabla "usuarios"
-    const { data: userData, error: userError } = await db
-      .from("usuarios")
-      .select("username, logo")
-      .eq("id", user.id)
-      .single();
-
-    if (userError) {
-      console.error("Error cargando datos del usuario:", userError);
-      return;
-    }
+    const { data: userData } = await db.from("usuarios").select("username, logo").eq("id", user.id).single();
 
     currentUser = { id: user.id, ...userData };
 
@@ -137,61 +121,36 @@
     document.getElementById("userLogo").src = currentUser.logo || "logoDefault.png";
   }
 
-  // Cerrar sesión
+  document.addEventListener("DOMContentLoaded", () => {
+    loadUserInfo();
+    loadBlogs();
+  });
+
+  function goToSettings() { window.location.href = 'ajustes.html'; }
   async function logout() {
     await db.auth.signOut();
+    currentUser = null;
     window.location.href = "login.html";
   }
 
-  // Mostrar formulario de nuevo blog
+  const userInfoDiv = document.getElementById("userInfo");
+  const dropdownMenu = document.getElementById("dropdownMenu");
+  userInfoDiv.addEventListener("click", () => {
+    dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
+  });
+  document.addEventListener("click", (e) => {
+    if (!userInfoDiv.contains(e.target) && !dropdownMenu.contains(e.target)) dropdownMenu.style.display = "none";
+  });
+
   function showNewBlogForm() {
-    if (!currentUser) {
-      alert("Debes iniciar sesión para publicar un blog");
-      return;
-    }
+    if (!currentUser) { alert("Debes iniciar sesión para publicar un blog"); return; }
     document.getElementById("newBlogForm").classList.remove("hidden");
   }
-  function hideNewBlogForm() {
-    document.getElementById("newBlogForm").classList.add("hidden");
-  }
+  function hideNewBlogForm() { document.getElementById("newBlogForm").classList.add("hidden"); }
 
-  // Publicar blog
-  async function publishBlog() {
-    if (!currentUser) {
-      alert("❌ Debes iniciar sesión para publicar un blog");
-      return;
-    }
-
-    const title = document.getElementById("newTitle").value.trim();
-    const content = document.getElementById("newContent").value.trim();
-    if (!title || !content) {
-      alert("Completa todos los campos");
-      return;
-    }
-
-    const { error } = await db.from("blog").insert([{
-      title,
-      content,
-      author: currentUser.username
-    }]);
-
-    if (error) {
-      console.error(error);
-      alert("Error al publicar blog");
-      return;
-    }
-
-    hideNewBlogForm();
-    loadBlogs();
-  }
-
-  // Cargar blogs
   async function loadBlogs() {
     const { data, error } = await db.from("blog").select("*").order("created_at", { ascending: false });
-    if (error) {
-      console.error(error);
-      return;
-    }
+    if (error) { console.error(error); return; }
 
     const blogsList = document.getElementById("blogsList");
     blogsList.innerHTML = "";
@@ -206,40 +165,62 @@
     });
   }
 
-  // Publicar comentario
+  function openBlog(blog) {
+    document.getElementById("blogTitleDetail").textContent = blog.title;
+    document.getElementById("blogContentDetail").textContent = blog.content;
+    document.getElementById("blogsList").classList.add("hidden");
+    document.getElementById("blogDetails").classList.remove("hidden");
+
+    window.currentBlogId = blog.id;
+    loadComments(blog.id);
+  }
+
+  function closeBlog() {
+    document.getElementById("blogDetails").classList.add("hidden");
+    document.getElementById("blogsList").classList.remove("hidden");
+  }
+
+  async function publishBlog() {
+    if (!currentUser) { alert("❌ Debes iniciar sesión para publicar un blog"); return; }
+
+    const title = document.getElementById("newTitle").value.trim();
+    const content = document.getElementById("newContent").value.trim();
+    if (!title || !content) { alert("Completa todos los campos"); return; }
+
+    const { error } = await db.from("blog").insert([{ title, content, author: currentUser.username }]);
+    if (error) { console.error(error); alert("Error al publicar"); return; }
+
+    hideNewBlogForm();
+    loadBlogs();
+  }
+
+  async function loadComments(blogId) {
+    const { data, error } = await db.from("comments").select("*").eq("blog_id", blogId).order("created_at", { ascending: true });
+    const commentsList = document.getElementById("commentsList");
+    commentsList.innerHTML = "";
+
+    if (error) { commentsList.innerHTML = "<p>Error al cargar comentarios</p>"; return; }
+    if (!data.length) { commentsList.innerHTML = "<p>No hay comentarios todavía.</p>"; return; }
+
+    data.forEach(comment => {
+      const div = document.createElement("div");
+      div.innerHTML = `<strong>${comment.author}</strong>: ${comment.comment}`;
+      commentsList.appendChild(div);
+    });
+  }
+
   async function publishComment() {
-    if (!currentUser) {
-      alert("Debes iniciar sesión para comentar");
-      return;
-    }
+    if (!currentUser) { alert("Debes iniciar sesión para comentar"); return; }
 
     const commentText = document.getElementById("newCommentText").value.trim();
-    if (!commentText) {
-      alert("Escribe un comentario");
-      return;
-    }
+    if (!commentText) { alert("Escribe un comentario"); return; }
 
-    const { error } = await db.from("comments").insert([{
-      blog_id: window.currentBlogId,
-      author: currentUser.username,
-      comment: commentText
-    }]);
-
-    if (error) {
-      console.error(error);
-      alert("❌ Error al publicar comentario");
-      return;
-    }
+    const { error } = await db.from("comments").insert([{ blog_id: window.currentBlogId, author: currentUser.username, comment: commentText }]);
+    if (error) { console.error(error); alert("❌ Error al publicar comentario"); return; }
 
     document.getElementById("newCommentText").value = "";
     loadComments(window.currentBlogId);
   }
-
-  // Inicialización
-  document.addEventListener("DOMContentLoaded", () => {
-    loadUserInfo();
-    loadBlogs();
-  });
 </script>
 </body>
 </html>
