@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <title>Chats (Supabase) - Con errores visibles</title>
+  <title>Chats (Supabase) - Optimizado</title>
   <script src="https://unpkg.com/@supabase/supabase-js"></script>
   <style>
     body{margin:0;padding:0;font-family:Arial, sans-serif;display:flex;height:100vh;background:#111;color:#fff}
@@ -49,13 +49,14 @@
 
 <script>
 const SUPABASE_URL = "https://jdvwlfogkzrzovepzjqa.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkdndsZm9na3pyem92ZXB6anFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMzY1MjEsImV4cCI6MjA3MzYxMjUyMX0.IwVFrvuluY0tfgE82XnqYSsRjFPsDYnlfyirHjKu1TI";
+const SUPABASE_KEY = "TU_API_KEY_AQUI"; // ⚠️ pon tu clave aquí segura
 
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let usuario = JSON.parse(localStorage.getItem("currentUser")) || { username: "User" + Math.floor(Math.random()*1000) };
 let chatActual = null;
+let refreshMensajes, refreshMiembros;
 
 /* --- Mostrar errores en pantalla --- */
 function mostrarError(msg){
@@ -120,9 +121,7 @@ async function crearChat() {
 }
 
 /* ---------- Abrir chat ---------- */
-/* ---------- Abrir chat ---------- */
 async function abrirChat(chatId) {
-  // Obtener chat
   const { data: chatData, error } = await db
     .from("chats")
     .select("*")
@@ -131,56 +130,50 @@ async function abrirChat(chatId) {
 
   if (error) { mostrarError("Error abriendo chat: " + error.message); return; }
 
-  // --- Agregar al usuario a miembros si no está ---
-  const miembros = Array.isArray(chatData.miembros) ? chatData.miembros : [];
+  // Añadir usuario si no está
+  let miembros = Array.isArray(chatData.miembros) ? chatData.miembros : [];
   if (!miembros.includes(usuario.username)) {
-    const nuevosMiembros = [...miembros, usuario.username];
+    miembros.push(usuario.username);
     const { error: updateError } = await db
       .from("chats")
-      .update({ miembros: nuevosMiembros })
+      .update({ miembros })
       .eq("id", chatId);
 
-    if (updateError) mostrarError("Error actualizando miembros: " + updateError.message);
-    else chatData.miembros = nuevosMiembros; // actualizar localmente
+    if (updateError) { mostrarError("Error actualizando miembros: " + updateError.message); }
   }
 
   chatActual = chatData;
 
-  // --- Función para refrescar miembros ---
-  async function refrescarMiembros() {
-    const { data: updatedChat, error } = await db
-      .from("chats")
-      .select("miembros, creador")
-      .eq("id", chatId)
-      .single();
+  // Refrescar miembros y mensajes
+  refrescarMiembros(chatId);
+  cargarMensajes(chatId);
 
-    if (error) { mostrarError("Error actualizando miembros: " + error.message); return; }
+  if (refreshMensajes) clearInterval(refreshMensajes);
+  if (refreshMiembros) clearInterval(refreshMiembros);
 
-    const membersUl = document.getElementById("members-list");
-    membersUl.innerHTML = "";
-    const currentMembers = Array.isArray(updatedChat.miembros) ? updatedChat.miembros : [];
-    currentMembers.forEach(m => {
-      const li = document.createElement("li");
-      li.textContent = m;
-      if (m === updatedChat.creador) li.classList.add("creator");
-      membersUl.appendChild(li);
-    });
-  }
+  refreshMensajes = setInterval(() => cargarMensajes(chatId), 2000);
+  refreshMiembros = setInterval(() => refrescarMiembros(chatId), 5000);
+}
 
-  // Mostrar miembros inicialmente
-  refrescarMiembros();
+/* ---------- Refrescar miembros ---------- */
+async function refrescarMiembros(chatId) {
+  const { data: updatedChat, error } = await db
+    .from("chats")
+    .select("miembros, creador")
+    .eq("id", chatId)
+    .single();
 
-  // --- Configurar recarga automática cada 2 segundos ---
-  if (window.mensajeIntervalo) clearInterval(window.mensajeIntervalo); 
-  if (window.miembrosIntervalo) clearInterval(window.miembrosIntervalo);
+  if (error) { mostrarError("Error refrescando miembros: " + error.message); return; }
 
-  window.mensajeIntervalo = setInterval(() => {
-    if (chatActual && chatActual.id) cargarMensajes(chatActual.id);
-  }, 1);
-
-  window.miembrosIntervalo = setInterval(() => {
-    refrescarMiembros();
-  }, 1);
+  const membersUl = document.getElementById("members-list");
+  membersUl.innerHTML = "";
+  const currentMembers = Array.isArray(updatedChat.miembros) ? updatedChat.miembros : [];
+  currentMembers.forEach(m => {
+    const li = document.createElement("li");
+    li.textContent = m;
+    if (m === updatedChat.creador) li.classList.add("creator");
+    membersUl.appendChild(li);
+  });
 }
 
 /* ---------- Cargar mensajes ---------- */
@@ -203,8 +196,8 @@ async function cargarMensajes(chatId) {
 
   mensajes.forEach(m => {
     const p = document.createElement("p");
-    const time = new Date(m.created_at).toLocaleString();
-    p.textContent = `${m.author} — ${time}: ${m.message}`;
+    const time = new Date(m.created_at).toLocaleTimeString();
+    p.textContent = `${m.author} [${time}]: ${m.message}`;
     container.appendChild(p);
   });
 
