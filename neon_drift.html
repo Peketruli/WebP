@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>NEON_DRIFT</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Courier New', monospace; }
+        
+        #interfaz {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 10;
+        }
+
+        #contenedor-stats {
+            position: absolute; top: 20px; right: 30px; text-align: right;
+        }
+        #puntuacion { color: #0ff; font-size: 50px; text-shadow: 0 0 20px #0ff; font-weight: bold; margin: 0; }
+        #nivel-display { color: #f0f; font-size: 20px; letter-spacing: 5px; font-weight: bold; }
+
+        #mensaje-consola { 
+            position: absolute; top: 20px; left: 30px;
+            color: #f0f; font-size: 16px; text-transform: uppercase; 
+            letter-spacing: 3px; opacity: 0; transition: opacity 0.5s;
+        }
+        
+        .pantalla {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); backdrop-filter: blur(15px);
+            display: flex; flex-direction: column; justify-content: center;
+            align-items: center; z-index: 20; pointer-events: auto;
+            color: white;
+        }
+
+        .score-board {
+            margin-top: 20px; background: rgba(255, 255, 255, 0.1);
+            padding: 20px; border: 1px solid #0ff; width: 300px;
+        }
+        .score-item { display: flex; justify-content: space-between; margin: 5px 0; color: #0ff; }
+
+        h1 { color: #f0f; text-shadow: 0 0 30px #f0f; font-size: 60px; margin: 0; }
+        button {
+            background: transparent; border: 2px solid #0ff; color: #0ff;
+            padding: 15px 50px; font-family: inherit; font-weight: bold;
+            cursor: pointer; margin-top: 30px; transition: 0.3s;
+        }
+        button:hover { background: #0ff; color: #000; box-shadow: 0 0 40px #0ff; }
+    </style>
+</head>
+<body>
+
+    <div id="interfaz">
+        <div id="mensaje-consola">INICIANDO...</div>
+        <div id="contenedor-stats">
+            <div id="nivel-display">NIVEL_01</div>
+            <div id="puntuacion">0000</div>
+        </div>
+    </div>
+
+    <div id="pantalla-inicio" class="pantalla">
+        <h1>NEON_DRIFT</h1>
+        <p style="color: #0ff;">ESQUIVA LOS CRISTALES DE DATOS</p>
+        <button onclick="iniciarJuego()">INICIAR PROTOCOLO</button>
+    </div>
+
+    <div id="pantalla-muerte" class="pantalla" style="display: none;">
+        <h1 style="color: red;">CONEXIÓN PERDIDA</h1>
+        <div id="final-score" style="font-size: 24px; margin: 10px 0;">PUNTOS: 0</div>
+        <div class="score-board" id="score-board-lista">
+            </div>
+        <button onclick="location.reload()">REINTENTAR</button>
+    </div>
+
+    <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+
+    <script>
+        let scene, camera, renderer, player, stars;
+        let segmentosSuelo = [];
+        let obstaculos = [];
+        let juegoActivo = false;
+        let score = 0;
+        let nivel = 1;
+        let speed = 2.5;
+        const MAX_NIVEL = 10;
+        const PUNTOS_POR_NIVEL = 2000;
+        const TAMANO_SEGMENTO = 200;
+        const TOTAL_SEGMENTOS = 6;
+        const keys = { a: false, d: false };
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x000000, 0.006);
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 15, 35);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+            scene.add(new THREE.HemisphereLight(0xff00ff, 0x00ffff, 0.6));
+
+            crearJugador();
+            crearSueloInicial();
+            crearParticulas();
+            animate();
+        }
+
+        function mostrarMensaje(texto) {
+            const el = document.getElementById('mensaje-consola');
+            el.innerText = texto;
+            el.style.opacity = 1;
+            setTimeout(() => { el.style.opacity = 0; }, 2500);
+        }
+
+        function crearParticulas() {
+            const geo = new THREE.BufferGeometry();
+            const count = 1000;
+            const positions = new Float32Array(count * 3);
+            for(let i = 0; i < count * 3; i++) positions[i] = (Math.random() - 0.5) * 600;
+            geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            stars = new THREE.Points(geo, new THREE.PointsMaterial({ color: 0x00ffff, size: 0.6 }));
+            scene.add(stars);
+        }
+
+        function crearJugador() {
+            player = new THREE.Group();
+            const mat = new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x00ffff, emissiveIntensity: 0.5 });
+            player.add(new THREE.Mesh(new THREE.BoxGeometry(4, 1.2, 7), mat));
+            player.add(new THREE.Mesh(new THREE.BoxGeometry(8, 0.5, 3), mat));
+            player.position.y = 2;
+            scene.add(player);
+        }
+
+        function crearSueloInicial() {
+            for (let i = 0; i < TOTAL_SEGMENTOS; i++) {
+                const plano = new THREE.Mesh(
+                    new THREE.PlaneGeometry(160, TAMANO_SEGMENTO, 20, 20),
+                    new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0x5500ff, wireframe: true, transparent: true, opacity: 0.4 })
+                );
+                plano.rotation.x = -Math.PI / 2;
+                plano.position.z = -i * TAMANO_SEGMENTO;
+                scene.add(plano);
+                segmentosSuelo.push(plano);
+            }
+        }
+
+        function spawnObstaculo(zPos) {
+            // La dificultad aumenta la cantidad de obstáculos
+            const cantidad = Math.min(2 + Math.floor(nivel / 2), 6);
+            for(let i = 0; i < cantidad; i++) {
+                const obs = new THREE.Mesh(
+                    new THREE.IcosahedronGeometry(Math.random() * 3 + 4, 0),
+                    new THREE.MeshStandardMaterial({ color: 0xff00ff, emissive: 0xff00ff, emissiveIntensity: 1.5, flatShading: true })
+                );
+                obs.position.set((Math.random() - 0.5) * 120, 6, zPos + (Math.random() * -80));
+                scene.add(obs);
+                obstaculos.push(obs);
+            }
+        }
+
+        function actualizarDificultad() {
+            let nuevoNivel = Math.floor(score / PUNTOS_POR_NIVEL) + 1;
+            if (nuevoNivel > nivel && nivel < MAX_NIVEL) {
+                nivel = nuevoNivel;
+                speed += 0.4;
+                document.getElementById('nivel-display').innerText = `NIVEL_${nivel.toString().padStart(2, '0')}`;
+                mostrarMensaje(`NIVEL ${nivel}: VELOCIDAD INCREMENTADA`);
+                if(nivel === MAX_NIVEL) mostrarMensaje("¡NIVEL MÁXIMO ALCANZADO!");
+            }
+        }
+
+        function finalizarJuego() {
+            juegoActivo = false;
+            document.getElementById('final-score').innerText = `PUNTOS: ${score}`;
+            guardarScore(score);
+            mostrarScores();
+            document.getElementById('pantalla-muerte').style.display = 'flex';
+        }
+
+        function guardarScore(nuevoScore) {
+            let scores = JSON.parse(localStorage.getItem('neon_scores')) || [];
+            scores.push(nuevoScore);
+            scores.sort((a, b) => b - a);
+            scores = scores.slice(0, 5); // Guardar solo top 5
+            localStorage.setItem('neon_scores', JSON.stringify(scores));
+        }
+
+        function mostrarScores() {
+            const lista = document.getElementById('score-board-lista');
+            const scores = JSON.parse(localStorage.getItem('neon_scores')) || [];
+            lista.innerHTML = '<div style="color:#f0f; margin-bottom:10px">TOP_REGISTROS:</div>';
+            scores.forEach((s, i) => {
+                lista.innerHTML += `<div class="score-item"><span>#${i+1}</span> <span>${s}</span></div>`;
+            });
+        }
+
+        function iniciarJuego() {
+            document.getElementById('pantalla-inicio').style.display = 'none';
+            juegoActivo = true;
+            mostrarMensaje("SISTEMA ONLINE");
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (juegoActivo) {
+                score += 1;
+                document.getElementById('puntuacion').innerText = score.toString().padStart(4, '0');
+                
+                actualizarDificultad();
+
+                camera.fov = THREE.MathUtils.lerp(camera.fov, 75 + (speed * 2), 0.05);
+                camera.updateProjectionMatrix();
+
+                // Movimiento suelo y obstáculos
+                segmentosSuelo.forEach(plano => {
+                    plano.position.z += speed;
+                    if (plano.position.z > TAMANO_SEGMENTO) {
+                        plano.position.z -= TAMANO_SEGMENTO * TOTAL_SEGMENTOS;
+                        spawnObstaculo(plano.position.z - 100);
+                    }
+                });
+
+                for (let i = obstaculos.length - 1; i >= 0; i--) {
+                    const obs = obstaculos[i];
+                    obs.position.z += speed;
+                    obs.rotation.y += 0.05;
+                    if (player.position.distanceTo(obs.position) < 8) finalizarJuego();
+                    if (obs.position.z > 60) { scene.remove(obs); obstaculos.splice(i, 1); }
+                }
+
+                // Control jugador
+                const limit = 70;
+                if (keys.a && player.position.x > -limit) player.position.x -= (2 + speed*0.1);
+                if (keys.d && player.position.x < limit) player.position.x += (2 + speed*0.1);
+                player.rotation.z = THREE.MathUtils.lerp(player.rotation.z, (keys.a ? 0.4 : keys.d ? -0.4 : 0), 0.1);
+                
+                camera.position.x = THREE.MathUtils.lerp(camera.position.x, player.position.x * 0.4, 0.05);
+                stars.rotation.z += 0.001;
+            }
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 'a') keys.a = true;
+            if (e.key.toLowerCase() === 'd') keys.d = true;
+        });
+        window.addEventListener('keyup', (e) => {
+            if (e.key.toLowerCase() === 'a') keys.a = false;
+            if (e.key.toLowerCase() === 'd') keys.d = false;
+        });
+
+        init();
+    </script>
+</body>
+</html>
