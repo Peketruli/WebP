@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Sector 9: FASE 1</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Courier New', monospace; }
+        #interfaz-usuario { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 3000; pointer-events: none; }
+        .pantalla { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            display: flex; flex-direction: column; justify-content: center; 
+            align-items: center; pointer-events: auto;
+            background: rgba(0,0,0,0.95);
+            backdrop-filter: blur(20px);
+        }
+        #hud { position: absolute; top: 20px; left: 20px; color: #0f0; font-size: 20px; display: none; text-shadow: 2px 2px #000; }
+        button { padding: 20px 40px; border: 2px solid #0f0; background: transparent; color: #0f0; cursor: pointer; font-weight: bold; letter-spacing: 3px; font-family: inherit; margin: 15px 0; transition: 0.2s; }
+        button:hover { background: #0f0; color: #000; box-shadow: 0 0 25px #0f0; }
+        #fundido { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; transition: opacity 0.8s; z-index: 2000; }
+        #overlay-rojo { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: red; opacity: 0; pointer-events: none; z-index: 2500; }
+        h1 { color: #0f0; letter-spacing: 10px; text-shadow: 0 0 20px #0f0; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div id="fundido"></div>
+    <div id="overlay-rojo"></div>
+
+    <div id="interfaz-usuario">
+        <div id="pantalla-inicio" class="pantalla">
+            <h1>SECTOR 9<br><small style="font-size: 0.4em; letter-spacing: 5px;">FASE 1: CONEXIÓN INICIAL</small></h1>
+            <button id="btn-comenzar">INICIAR CONEXIÓN</button>
+        </div>
+        
+        <div id="pantalla-pausa" class="pantalla" style="display: none;">
+            <h1>SISTEMA EN PAUSA</h1>
+            <button id="btn-reanudar">REANUDAR</button>
+            <button onclick="location.reload()" style="border-color: #555; color: #555; margin-top: 10px;">REINICIAR</button>
+        </div>
+
+        <div id="pantalla-muerte" class="pantalla" style="display: none;">
+            <h1 style="color: red;">TERMINAL DESTRUIDA</h1>
+            <button onclick="location.reload()">REINTENTAR</button>
+        </div>
+
+        <div id="pantalla-final" class="pantalla" style="display: none;">
+            <h1 style="color: gold;">SISTEMA DEPURADO</h1>
+            <p style="color: #0f0;">DATOS EXTRAÍDOS. PROCEDIENDO AL SIGUIENTE SECTOR.</p>
+            <button onclick="window.location.href='index2.html'">IR A FASE 2</button>
+        </div>
+
+        <div id="hud">NÚCLEOS: <span id="contador">0</span> / 5</div>
+    </div>
+
+    <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
+
+    <script>
+        let scene, camera, renderer, controls, lantern, ambientLight, enemyLight;
+        let forestGroup, officeGroup, enemy;
+        let fase = 'MENU', fusiblesEncontrados = 0, godMode = false;
+        let secretBuffer = "";
+        const UNIT = 10, walls = [], wallMeshes = [], items = [], keys = {};
+        
+        let iaVelocity = new THREE.Vector3(0, 0, 0);
+        let iaHeading = 0; 
+        let iaTimer = 0;
+
+        const mapa = [
+            [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+            [0,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,0],
+            [0,1,0,0,0,1,0,1,0,0,0,0,0,0,1,0,0,0,1,0],
+            [0,1,0,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,0],
+            [0,1,0,1,0,0,0,0,0,1,0,0,0,1,0,1,0,0,1,0],
+            [0,1,1,1,0,1,1,1,1,1,0,1,1,1,1,1,1,1,1,0],
+            [0,0,0,1,0,1,0,0,0,1,0,1,0,0,0,0,0,0,1,0],
+            [0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
+            [0,1,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,1,0],
+            [0,1,1,1,1,1,1,1,0,1,1,1,1,1,0,1,1,1,1,0],
+            [0,0,0,0,1,0,0,1,0,1,0,0,0,1,0,1,0,0,0,0],
+            [0,1,1,1,1,0,1,1,1,1,1,1,0,1,1,1,1,1,1,0],
+            [0,1,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0],
+            [0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
+            [0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,1,0],
+            [0,1,1,1,0,1,1,1,1,1,1,1,1,1,0,1,1,1,1,0],
+            [0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0],
+            [0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
+            [0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
+            [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+        ];
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x000000, 0.018);
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1500);
+            camera.position.set(0, 60, 700);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
+            scene.add(ambientLight);
+
+            lantern = new THREE.SpotLight(0xffffff, 12, 160, 0.45, 0.25, 1);
+            scene.add(lantern); scene.add(lantern.target);
+
+            crearBosque(); crearOficina();
+
+            controls = new THREE.PointerLockControls(camera, document.body);
+            document.getElementById('btn-comenzar').onclick = () => { fase = 'INTRO'; document.getElementById('pantalla-inicio').style.display = 'none'; };
+            document.getElementById('btn-reanudar').onclick = () => controls.lock();
+
+            controls.addEventListener('unlock', () => { if(fase==='JUEGO') document.getElementById('pantalla-pausa').style.display='flex'; });
+            controls.addEventListener('lock', () => { document.getElementById('pantalla-pausa').style.display='none'; });
+
+            animate();
+        }
+
+        function crearBosque() {
+            forestGroup = new THREE.Group();
+            for(let i=0; i<450; i++) {
+                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.9, 90), new THREE.MeshStandardMaterial({color: 0x111111}));
+                trunk.position.set(Math.random()*2400-1200, 45, Math.random()*1200-400);
+                const leaves = new THREE.Mesh(new THREE.ConeGeometry(12, 60, 6), new THREE.MeshStandardMaterial({color: 0x010401}));
+                leaves.position.y = 45; trunk.add(leaves); forestGroup.add(trunk);
+            }
+            scene.add(forestGroup);
+        }
+
+        function crearOficina() {
+            officeGroup = new THREE.Group(); officeGroup.visible = false;
+            mapa.forEach((row, z) => {
+                row.forEach((cell, x) => {
+                    if(cell === 0) {
+                        const wall = new THREE.Mesh(new THREE.BoxGeometry(UNIT, 25, UNIT), new THREE.MeshStandardMaterial({color: 0x181818}));
+                        wall.position.set(x*UNIT, 12.5, z*UNIT);
+                        officeGroup.add(wall);
+                        wallMeshes.push(wall);
+                        walls.push(new THREE.Box3().setFromObject(wall));
+                    }
+                });
+            });
+            enemy = new THREE.Mesh(new THREE.BoxGeometry(6, 14, 6), new THREE.MeshStandardMaterial({color: 0xff0000, emissive: 0xff0000, emissiveIntensity: 1.5}));
+            enemy.position.set(180, 7.5, 180);
+            
+            // Luz de acecho para el enemigo (como en Fase 2)
+            enemyLight = new THREE.PointLight(0xff0000, 5, 50);
+            enemy.add(enemyLight);
+            
+            officeGroup.add(enemy);
+
+            const fCoords = [[1,5], [18,1], [1,18], [15,10], [5,1]];
+            fCoords.forEach(pos => {
+                const g = new THREE.Mesh(new THREE.OctahedronGeometry(1.6), new THREE.MeshBasicMaterial({color: 0x00ffff}));
+                g.position.set(pos[0]*UNIT, 6, pos[1]*UNIT);
+                items.push(g); officeGroup.add(g);
+            });
+            scene.add(officeGroup);
+        }
+
+        function updateAIPro() {
+            const speed = 0.88;
+            const distPlayer = enemy.position.distanceTo(camera.position);
+
+            let rayDirection = new THREE.Vector3().subVectors(camera.position, enemy.position).normalize();
+            let raycaster = new THREE.Raycaster(enemy.position, rayDirection);
+            let intersects = raycaster.intersectObjects(wallMeshes);
+            let canSee = distPlayer < 140 && (intersects.length === 0 || intersects[0].distance > distPlayer);
+
+            let targetDir = new THREE.Vector3();
+
+            if (canSee) {
+                targetDir.copy(rayDirection);
+                iaHeading = Math.atan2(rayDirection.x, rayDirection.z);
+            } else {
+                if (Date.now() > iaTimer) {
+                    const randomChoice = Math.floor(Math.random() * 4);
+                    iaHeading = randomChoice * (Math.PI / 2); 
+                    iaTimer = Date.now() + 1500 + Math.random() * 2000;
+                }
+                targetDir.set(Math.sin(iaHeading), 0, Math.cos(iaHeading));
+            }
+
+            iaVelocity.lerp(targetDir, 0.12);
+            let nextPos = enemy.position.clone().add(iaVelocity.clone().multiplyScalar(speed));
+            
+            let boxX = new THREE.Box3().setFromCenterAndSize(new THREE.Vector3(nextPos.x, 7.5, enemy.position.z), new THREE.Vector3(7, 7, 7));
+            let boxZ = new THREE.Box3().setFromCenterAndSize(new THREE.Vector3(enemy.position.x, 7.5, nextPos.z), new THREE.Vector3(7, 7, 7));
+
+            let colX = walls.some(w => w.intersectsBox(boxX));
+            let colZ = walls.some(w => w.intersectsBox(boxZ));
+
+            if (!colX) enemy.position.x = nextPos.x; else iaTimer = 0;
+            if (!colZ) enemy.position.z = nextPos.z; else iaTimer = 0;
+
+            enemy.lookAt(enemy.position.clone().add(iaVelocity));
+
+            if(distPlayer < 8 && !godMode) {
+                fase = 'MUERTE'; controls.unlock(); document.getElementById('pantalla-muerte').style.display = 'flex';
+            }
+        }
+
+        function updatePlayer() {
+            let speed = 1.35, move = new THREE.Vector3();
+            if(keys['KeyW']) move.z -= speed; if(keys['KeyS']) move.z += speed;
+            if(keys['KeyA']) move.x -= speed; if(keys['KeyD']) move.x += speed;
+            move.applyQuaternion(camera.quaternion); move.y = 0;
+
+            const nPos = camera.position.clone();
+            const pBoxX = new THREE.Box3().setFromCenterAndSize(nPos.clone().add(new THREE.Vector3(move.x, 0, 0)), new THREE.Vector3(3.5, 3.5, 3.5));
+            const pBoxZ = new THREE.Box3().setFromCenterAndSize(nPos.clone().add(new THREE.Vector3(0, 0, move.z)), new THREE.Vector3(3.5, 3.5, 3.5));
+
+            if(!walls.some(w => w.intersectsBox(pBoxX))) camera.position.x += move.x;
+            if(!walls.some(w => w.intersectsBox(pBoxZ))) camera.position.z += move.z;
+
+            items.forEach((g, i) => {
+                if(camera.position.distanceTo(g.position) < 8) {
+                    officeGroup.remove(g); items.splice(i,1);
+                    fusiblesEncontrados++; document.getElementById('contador').innerText = fusiblesEncontrados;
+                }
+            });
+
+            if(fusiblesEncontrados >= 5) {
+                fase = 'TRANS_FINAL'; document.getElementById('fundido').style.opacity = 1;
+                setTimeout(() => {
+                    officeGroup.visible = false; forestGroup.visible = true;
+                    camera.position.set(0, 7.5, 250);
+                    enemy.position.set(0, 7.5, 60);
+                    forestGroup.add(enemy);
+                    fase = 'ESCENA_FINAL';
+                    document.getElementById('fundido').style.opacity = 0;
+                }, 1000);
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            let time = Date.now() * 0.001;
+
+            if(fase === 'INTRO') {
+                ambientLight.intensity = 15.0;
+                camera.position.z -= 10;
+                if(camera.position.z < 120) {
+                    fase = 'TRANSICION'; document.getElementById('fundido').style.opacity = 1;
+                    setTimeout(() => {
+                        forestGroup.visible = false; officeGroup.visible = true;
+                        camera.position.set(10, 7.5, 10);
+                        fase = 'JUEGO'; document.getElementById('hud').style.display = 'block';
+                        document.getElementById('fundido').style.opacity = 0; controls.lock();
+                    }, 800);
+                }
+            }
+
+            if(fase === 'JUEGO' && controls.isLocked) {
+                ambientLight.intensity = 0.22;
+                updateAIPro();
+                updatePlayer();
+                lantern.position.copy(camera.position);
+                let tDir = new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
+                lantern.target.position.copy(camera.position).add(tDir);
+            }
+
+            if(fase === 'ESCENA_FINAL') {
+                camera.lookAt(enemy.position);
+                if(enemy.position.distanceTo(camera.position) > 6) {
+                    enemy.position.lerp(camera.position, 0.04);
+                    document.getElementById('overlay-rojo').style.opacity = Math.sin(time*25)*0.5 + 0.5;
+                    camera.position.x += Math.sin(time*60)*0.6;
+                } else {
+                    document.getElementById('overlay-rojo').style.opacity = 1;
+                    setTimeout(() => { 
+                        fase = 'TERMINADO';
+                        controls.unlock();
+                        document.getElementById('pantalla-final').style.display = 'flex'; 
+                    }, 1000);
+                }
+            }
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('keydown', (e) => {
+            keys[e.code] = true;
+            secretBuffer += e.key.toLowerCase();
+            if(secretBuffer.includes("peketruli")) { godMode = true; console.log("MODO DIOS"); secretBuffer = ""; }
+            if(secretBuffer.length > 15) secretBuffer = "";
+        });
+        window.addEventListener('keyup', (e) => keys[e.code] = false);
+        window.onload = init;
+    </script>
+</body>
+</html>
